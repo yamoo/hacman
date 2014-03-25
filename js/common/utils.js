@@ -4,7 +4,7 @@ HAC.define('utils',[
 	var each,
 		object2Array,
 		readMap,
-		server;
+		message;
 
 	each = function(arg, callback) {
 		var i;
@@ -65,18 +65,14 @@ HAC.define('utils',[
 		};
 	};
 
-	server = function() {
-		var socket;
-
-		socket = io.connect(Const.server);
-
-		return socket;
+	message = function(msg) {
+		alert(msg);
 	};
 
 	return {
 		each: each,
 		object2Array: object2Array,
 		ascii2map: ascii2map,
-		server: server
+		message: message
 	};
 });

@@ -1,4 +1,4 @@
-HAC.define('MapData',[
+HAC.define('BaseMapData',[
     'Const'
 ], function(Const) {
     var ascii,

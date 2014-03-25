@@ -3,21 +3,36 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Hacman</title>
+	<link rel="stylesheet" href="bootstrap-3.1.1-dist/css/bootstrap.min.css">
 	<style type="text/css">
 		body {
 			margin: 0;
 		}
+		.container {
+			width: 500px;
+		}
 	</style>
 </head>
 <body>
+    <div class="container">
+		<form class="form-signin" role="form" id="signin">
+        	<h2 class="form-signin-heading">Please sign in</h2>
+        	<input type="text" id="signin-nickname" class="form-control" placeholder="Your nickname" required autofocus>
+        	<button class="btn btn-lg btn-primary btn-block" type="submit">Play</button>
+      	</form>
+    </div> <!-- /container -->
+
+	<!--<script src="http://VLB12-28:3000/socket.io/socket.io.js"></script>-->
 	<script src="http://localhost:3000/socket.io/socket.io.js"></script>
 	<script src="lib/enchant.js/enchant.min.js"></script>
-	<script src="js/hac.js"></script>
-	<script src="js/constants.js"></script>
-	<script src="js/utils.js"></script>
-	<script src="js/mapData.js"></script>
-	<script src="js/basemap.js"></script>
-	<script src="js/sprite.hacman.js"></script>
+	<script src="js/common/hac.js"></script>
+	<script src="js/common/constants.js"></script>
+	<script src="js/common/utils.js"></script>
+	<script src="js/common/server.js"></script>
+	<script src="js/map/basemapData.js"></script>
+	<script src="js/map/basemap.js"></script>
+	<script src="js/sprite/hacman.js"></script>
+	<script src="js/game.js"></script>
 	<script src="js/main.js"></script>
 </body>
 </html>
