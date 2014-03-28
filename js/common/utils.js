@@ -4,7 +4,8 @@ HAC.define('utils',[
 	var each,
 		object2Array,
 		readMap,
-		message;
+		message,
+		$;
 
 	each = function(arg, callback) {
 		var i;
@@ -69,10 +70,21 @@ HAC.define('utils',[
 		alert(msg);
 	};
 
+	$ = function(selector) {
+		if (selector.charAt(0) === '#') {
+			return document.getElementById(selector.slice(1));
+		} else if (selector.charAt(0) === '.') {
+			return document.getElementsByClassName(selector.slice(1));
+		} else {
+			return document.querySelector(selector);
+		}
+	};
+
 	return {
 		each: each,
 		object2Array: object2Array,
 		ascii2map: ascii2map,
-		message: message
+		message: message,
+		$: $
 	};
 });

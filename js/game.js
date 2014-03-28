@@ -81,6 +81,7 @@ HAC.define('GameMain', [
 
         user = new Hacman({
             name: userData.name,
+            charaId: userData.charaId,
             x: userData.x,
             y: userData.y,
             map: this.map,

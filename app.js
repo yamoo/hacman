@@ -12,6 +12,7 @@ io.sockets.on('connection', function (socket) {
 		newUser = {
 			id: socket.id,
 			name: userData.name,
+			charaId: userData.charaId,
 			x: userData.x,
 			y: userData.y
 		};

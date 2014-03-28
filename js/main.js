@@ -3,28 +3,36 @@ HAC.main([
     'Server',
     'GameMain'
 ], function(utils, Server, GameMain) {
-    var server, game, $signin;
+    var server,
+        game,
+        $signin;
 
     server = new Server();
     server.on('accept', function(data) {
         game = new GameMain(server);
     });
 
-    $signin = document.getElementById('signin');
-    $signin.addEventListener('submit', function(e) {
-        var name = document.getElementById('signin-nickname').value;
+    $signin = utils.$('#signin');
+    $signin.addEventListener('submit', _onSubmit);
 
-        if (name) {
+    function _onSubmit(e) {
+        var nickname,
+            chara;
+
+        e.preventDefault();
+        nickname = utils.$('#signin-nickname').value;
+        chara = utils.$('[name="signin-chara[]"]:checked').value;
+
+        if (nickname) {
             server.connect({
-                name: name,
+                name: nickname,
+                charaId: chara,
                 x: 32,
                 y: 32
             });
         } else {
             utils.message('Please enter your nickname');
         }
-
-        e.preventDefault();
-    });
+    }
 
 });

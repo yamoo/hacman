@@ -22,7 +22,7 @@ HAC.define('Hacman',[
 
             this.chara = new Sprite(settings.width, settings.height);
             this.chara.image = this.game.assets[Const.assets['chara0']];
-            this.chara.frame = 0;
+            this.chara.frame = options.charaId;
 
             this.label = new Label();
             this.label.text = options.name;

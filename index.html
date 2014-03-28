@@ -1,38 +1,125 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<title>Hacman</title>
-	<link rel="stylesheet" href="bootstrap-3.1.1-dist/css/bootstrap.min.css">
-	<style type="text/css">
-		body {
-			margin: 0;
-		}
-		.container {
-			width: 500px;
-		}
-	</style>
+  <meta charset="UTF-8">
+  <title>Hacman</title>
+  <link rel="stylesheet" href="bootstrap-3.1.1-dist/css/bootstrap.min.css">
+  <style type="text/css">
+    body {
+      margin: 0;
+    }
+    .container {
+      width: 500px;
+    }
+    .chara {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      vertical-align: middle;
+      background-image: url(img/chara0.png);
+      background-repeat: no-repeat;
+    }
+    .chara1 {
+      background-position: -32px 0;
+    }
+    .chara2 {
+      background-position: -64px 0;
+    }
+    .chara3 {
+      background-position: -96px 0;
+    }
+    .chara4 {
+      background-position: -128px 0;
+    }
+    .chara5 {
+      background-position: -160px 0;
+    }
+    .chara6 {
+      background-position: -192px 0;
+    }
+    .chara7 {
+      background-position: -224px 0;
+    }
+    .chara8 {
+      background-position: -256px 0;
+    }
+    .chara9 {
+      background-position: -288px 0;
+    }
+    .chara10 {
+      background-position: -320px 0;
+    }
+    .chara11 {
+      background-position: -352px 0;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-		<form class="form-signin" role="form" id="signin">
-        	<h2 class="form-signin-heading">Please sign in</h2>
-        	<input type="text" id="signin-nickname" class="form-control" placeholder="Your nickname" required autofocus>
-        	<button class="btn btn-lg btn-primary btn-block" type="submit">Play</button>
-      	</form>
-    </div> <!-- /container -->
+  <div class="container">
+    <form class="form-signin" role="form" id="signin">
+      <h2 class="form-signin-heading">Please sign in</h2>
+      <div class="form-group">
+        <label for="signin-nickname">Nickname</label>
+        <input type="text" id="signin-nickname" class="form-control" placeholder="Your nickname" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Select Charactor</label>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="radio" name="signin-chara[]" value="1" required> <i class="chara chara1"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="2" required> <i class="chara chara2"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="3" required> <i class="chara chara3"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="4" required> <i class="chara chara4"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="5" required> <i class="chara chara5"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="6" required> <i class="chara chara6"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="7" required> <i class="chara chara7"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="8" required> <i class="chara chara8"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="9" required> <i class="chara chara9"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="10" required> <i class="chara chara10"></i>
+        </label>
+        <label>
+          <input type="radio" name="signin-chara[]" value="11" required> <i class="chara chara11"></i>
+        </label>
+      </div>
+      <button class="btn btn-lg btn-primary btn-block" type="submit">Play</button>
+    </form>
+    <br>
+    <div class="alert alert-warning">
+      <h4>Usage</h4>
+      <p>Move: Cursor key (Left, Top, Right, Bottom)</p>
+    </div>
+  </div><!-- /container -->
 
-	<!--<script src="http://VLB12-28:3000/socket.io/socket.io.js"></script>-->
-	<script src="http://localhost:3000/socket.io/socket.io.js"></script>
-	<script src="lib/enchant.js/enchant.min.js"></script>
-	<script src="js/common/hac.js"></script>
-	<script src="js/common/constants.js"></script>
-	<script src="js/common/utils.js"></script>
-	<script src="js/common/server.js"></script>
-	<script src="js/map/basemapData.js"></script>
-	<script src="js/map/basemap.js"></script>
-	<script src="js/sprite/hacman.js"></script>
-	<script src="js/game.js"></script>
-	<script src="js/main.js"></script>
+  <!--<script src="http://VLB12-28:3000/socket.io/socket.io.js"></script>-->
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+  <script src="lib/enchant.js/enchant.min.js"></script>
+  <script src="js/common/hac.js"></script>
+  <script src="js/common/constants.js"></script>
+  <script src="js/common/utils.js"></script>
+  <script src="js/common/server.js"></script>
+  <script src="js/map/basemapData.js"></script>
+  <script src="js/map/basemap.js"></script>
+  <script src="js/sprite/hacman.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
