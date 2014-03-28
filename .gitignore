@@ -1,8 +1,8 @@
 .DS_Store
 Thumbs.db
 
-psd
-enchant.js
+/psd
+/enchant.js
 
 lib-cov
 *.seed
