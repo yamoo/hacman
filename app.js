@@ -1,5 +1,6 @@
 var io,
-	users;
+	users,
+	hacmanId;
 
 users = {};
 io = require('socket.io').listen(3000);
@@ -13,8 +14,9 @@ io.sockets.on('connection', function (socket) {
 			id: socket.id,
 			name: userData.name,
 			charaId: userData.charaId,
-			x: userData.x,
-			y: userData.y
+			isHacman: false,
+			x: 0,
+			y: 0
 		};
 
 		users[newUser.id] = newUser;
@@ -27,10 +29,22 @@ io.sockets.on('connection', function (socket) {
 		socket.broadcast.emit('join', newUser);
 	});
 
-	socket.on('move', function (data) {
-		users[data.id].x = data.x;
-		users[data.id].y = data.y;
-		socket.broadcast.emit('move', data);
+	socket.on('update', function (data) {
+		users[data.id].x = data.x || users[data.id].x;
+		users[data.id].y = data.y || users[data.id].y;
+		if (data.isHacman) {
+			users[data.id].isHacman = data.isHacman;
+			if (hacmanId) {
+				users[hacmanId].isHacman = false;
+				socket.broadcast.emit('update', users[hacmanId]);
+			}
+			hacmanId = data.id;
+		}
+		socket.broadcast.emit('update', data);
+	});
+
+	socket.on('replacePoint', function (data) {
+		socket.broadcast.emit('replacePoint', data);
 	});
 
 	socket.on('disconnect', function () {
@@ -39,5 +53,21 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.emit('confirm');
+
 });
+
+setInterval(function() {
+	io.sockets.socket(getAnyUser()).emit('replacePoint');
+}, 5000)
+
+function getAnyUser() {
+	var user;
+
+	for (user in users) {
+		break;
+	}
+
+	return user;
+}
+
 

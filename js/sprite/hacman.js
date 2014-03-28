@@ -33,6 +33,7 @@ HAC.define('Hacman',[
             this.addChild(this.label);
 
         },
+
         move: function(){
             var isMoved = false;
 
@@ -52,8 +53,12 @@ HAC.define('Hacman',[
             }
 
             return isMoved;
+        },
+
+        getHacman: function(flag) {
+            this.isHacman = flag
         }
-    });
+    }); 
 
     return Hacman;
 });

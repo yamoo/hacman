@@ -2,8 +2,9 @@ HAC.define('GameMain', [
     'Const',
     'utils',
     'BaseMap',
-    'Hacman'
-], function(Const, utils, BaseMap, Hacman) {
+    'Hacman',
+    'Point'
+], function(Const, utils, BaseMap, Hacman, Point) {
     var GameMain;
 
     GameMain = function(server) {
@@ -29,12 +30,14 @@ HAC.define('GameMain', [
     GameMain.prototype._main = function() {
         var _this = this;
 
+        _this.server.gameMain = _this;
         _this.usersArray = {};
         _this.rootScene = new Scene();
         _this.map = new BaseMap(_this.game);
         _this.users = new Group();
 
         _this.me = _this._createUser(_this.server.data.me);
+
         _this.rootScene.addChild(_this.map);
         _this.rootScene.addChild(_this.users);
         _this.game.pushScene(_this.rootScene);
@@ -51,18 +54,35 @@ HAC.define('GameMain', [
         //Update users
         _this.users.addEventListener('enterframe', function() {
             if (_this.me.move()) {
-                _this.server.send({
+                _this.server.update({
                     id: _this.server.data.me.id,
                     x: _this.me.x,
-                    y: _this.me.y
+                    y: _this.me.y,
+                    isHacman: (_this.point && _this.point.intersect(_this.me.chara)) ? true : false
                 });
             }
         });
 
         //The other user moved
-        _this.server.on('move', function(userData) {
-            _this.usersArray[userData.id].x = userData.x;
-            _this.usersArray[userData.id].y = userData.y;
+        _this.server.on('replacePoint', function(pointData) {
+            if (_this.point) {
+                _this.point.remove();
+            }
+            _this.point = _this._createPoint(pointData);
+            _this.rootScene.addChild(_this.point);
+        });
+
+        //The other user updated
+        _this.server.on('update', function(userData) {
+            _this.usersArray[userData.id].x = userData.x || _this.usersArray[userData.id].x;
+            _this.usersArray[userData.id].y = userData.y || _this.usersArray[userData.id].y;
+            if (userData.isHacman) {
+                _this.usersArray[data.id].getHacman(data.isHacman)
+                if (hacmanId) {
+                    _this.usersArray[hacmanId].getHacman(false);
+                }
+                hacmanId = data.id;
+            }
         });
 
         //The other user joind
@@ -76,14 +96,29 @@ HAC.define('GameMain', [
         });
     };
 
+    GameMain.prototype._createPoint = function(pointData) {
+        var point;
+
+        point = new Point({
+            x: pointData.x,
+            y: pointData.y,
+            game: this.game
+        });
+
+        return point;
+    };
+
     GameMain.prototype._createUser = function(userData) {
-        var user;
+        var user,
+            initPos;
+
+        initPos = this._getRandomPos();
 
         user = new Hacman({
             name: userData.name,
             charaId: userData.charaId,
-            x: userData.x,
-            y: userData.y,
+            x: initPos.x,
+            y: initPos.y,
             map: this.map,
             game: this.game
         });
@@ -105,6 +140,24 @@ HAC.define('GameMain', [
         return this.usersArray[userId];
     };
 
+    GameMain.prototype._getRandomPos = function() {
+        var pos; 
+
+        pos = {x: 0, y: 0};
+
+        while(1) {
+            pos.x = Math.floor(Math.random()*(this.map.width/this.map.tileWidth));
+            pos.y = Math.floor(Math.random()*(this.map.height/this.map.tileHeight));
+
+            if (!this.map.hitTest(pos.x, pos.y)) {
+                pos.x = (pos.x) * this.map.tileWidth;
+                pos.y = (pos.y) * this.map.tileHeight;
+                break;
+            }
+        }
+
+        return pos;
+    };
 
     return GameMain;
 });

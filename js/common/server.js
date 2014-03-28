@@ -42,15 +42,24 @@ HAC.define('Server',[
             _this.trigger('leave', userId);
         });
 
-        _this.socket.on('move', function (userData) {
-            _this.trigger('move', userData);
+        _this.socket.on('update', function (userData) {
+            _this.trigger('update', userData);
         });
+
+        _this.socket.on('replacePoint', function (pointData) {
+            if (!pointData) {
+                pointData = _this.gameMain._getRandomPos();
+                _this.socket.emit('replacePoint', pointData);
+            }
+            _this.trigger('replacePoint', pointData);  
+        });
+
 
         _this.trigger('accept', _this.data);
     };
 
-    Server.prototype.send = function(data) {
-        this.socket.emit('move', data);
+    Server.prototype.update = function(data) {
+        this.socket.emit('update', data);
     };
 
     Server.prototype.on = function(eventName, handler) {

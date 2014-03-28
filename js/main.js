@@ -26,9 +26,7 @@ HAC.main([
         if (nickname) {
             server.connect({
                 name: nickname,
-                charaId: chara,
-                x: 32,
-                y: 32
+                charaId: chara
             });
         } else {
             utils.message('Please enter your nickname');
