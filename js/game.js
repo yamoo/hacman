@@ -53,13 +53,21 @@ HAC.define('GameMain', [
 
         //Update users
         _this.users.addEventListener('enterframe', function() {
+            var intersect;
+
             if (_this.me.move()) {
+                intersect = (_this.point && _this.point.intersect(_this.me.chara)) ? true : false
                 _this.server.update({
                     id: _this.server.data.me.id,
                     x: _this.me.x,
                     y: _this.me.y,
-                    isHacman: (_this.point && _this.point.intersect(_this.me.chara)) ? true : false
+                    isHacman: intersect
                 });
+                if (intersect) {
+                    if (_this.point) {
+                        _this.point.remove();
+                    }
+                }
             }
         });
 
@@ -77,11 +85,14 @@ HAC.define('GameMain', [
             _this.usersArray[userData.id].x = userData.x || _this.usersArray[userData.id].x;
             _this.usersArray[userData.id].y = userData.y || _this.usersArray[userData.id].y;
             if (userData.isHacman) {
-                _this.usersArray[data.id].getHacman(data.isHacman)
+                _this.usersArray[userData.id].getHacman(userData.isHacman)
                 if (hacmanId) {
                     _this.usersArray[hacmanId].getHacman(false);
                 }
-                hacmanId = data.id;
+                hacmanId = userData.id;
+                if (_this.point) {
+                    _this.point.remove();
+                }
             }
         });
 
