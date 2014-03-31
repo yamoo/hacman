@@ -16,9 +16,15 @@ HAC.define('Hacman',[
             this.game = options.game;
             this.map = options.map;
 
+            this.isHacman = false;
             this.speed = 8;
             this.x = options.x || 0;
             this.y = options.y || 0;
+
+            this.hacmanFace = new Sprite(settings.width, settings.height);
+            this.hacmanFace.image = this.game.assets[Const.assets['chara0']];
+            this.hacmanFace.frame = 0;
+            this.hacmanFace.visible = false;
 
             this.chara = new Sprite(settings.width, settings.height);
             this.chara.image = this.game.assets[Const.assets['chara0']];
@@ -29,9 +35,9 @@ HAC.define('Hacman',[
             this.label.color = '#fff';
             this.label.x = this.chara.width;
 
+            this.addChild(this.hacmanFace);
             this.addChild(this.chara);
             this.addChild(this.label);
-
         },
 
         move: function(){
@@ -55,10 +61,16 @@ HAC.define('Hacman',[
             return isMoved;
         },
 
-        getHacman: function(flag) {
-            this.isHacman = flag
+        getHacman: function() {
+            this.isHacman = true;
+            this.hacmanFace.visible = true;
+        },
+
+        loseHacman: function() {
+            this.isHacman = false;
+            this.hacmanFace.visible = false;
         }
-    }); 
+    });
 
     return Hacman;
 });
