@@ -32,16 +32,14 @@ HAC.define('GameMain', [
     };
 
     GameMain.prototype._initWorld = function() {
-        var _this = this;
+        this.usersArray = {};
+        this.rootScene = new Scene();
+        this.map = new BaseMap(_this.game);
+        this.users = new Group();
 
-        _this.usersArray = {};
-        _this.rootScene = new Scene();
-        _this.map = new BaseMap(_this.game);
-        _this.users = new Group();
-
-        _this.rootScene.addChild(_this.map);
-        _this.rootScene.addChild(_this.users);
-        _this.game.pushScene(_this.rootScene);
+        this.rootScene.addChild(_this.map);
+        this.rootScene.addChild(_this.users);
+        this.game.pushScene(_this.rootScene);
     };
 
     GameMain.prototype.loadGame = function() {
@@ -55,6 +53,8 @@ HAC.define('GameMain', [
     GameMain.prototype._main = function() {
         var _this = this;
 
+        utils.bind(_this, '_onEnterFrame', '_removePoint', '_onReplacePoint', '_onJoinUser', '_onUpdateUser', '_onLeaveUser');
+
         _this.me = _this._createUser(_this.server.data.me);
 
         //Init users
@@ -67,61 +67,74 @@ HAC.define('GameMain', [
         });
 
         //Update users
-        _this.users.addEventListener('enterframe', function() {
-            var gotPoint;
-
-            if (_this.me.move()) {
-                gotPoint = (_this.point && _this.point.intersect(_this.me.chara)) ? true : false;
-                _this.server.updateUser({
-                    id: _this.server.data.me.id,
-                    x: _this.me.x,
-                    y: _this.me.y,
-                    isHacman: gotPoint
-                });
-                if (gotPoint) {
-                    _this.me.getHacman();
-                    _this._removePoint();
-                    _this.server.removePoint();
-                }
-            }
-        });
-
-        //The point was gotten by someone
-        _this.server.on('removePoint', function(pointData) {
-            _this._removePoint();
-        });
-
-        //The point repleced by timer
-        _this.server.on('replacePoint', function(pointData) {
-            _this._removePoint();
-            _this._createPoint(pointData);
-        });
-
-        //The other user updated
-        _this.server.on('updateUser', function(userData) {
-            _this.usersArray[userData.id].x = userData.x || _this.usersArray[userData.id].x;
-            _this.usersArray[userData.id].y = userData.y || _this.usersArray[userData.id].y;
-
-            if (!_this.usersArray[userData.id].isHacman && userData.isHacman) {
-
-                _this.usersArray[userData.id].getHacman();
-
-                if (_this.hacmanId) {
-                    _this.usersArray[_this.hacmanId].loseHacman();
-                }
-                _this.hacmanId = userData.id;
-            }
-        });
+        _this.users.addEventListener('enterframe', _this._onEnterFrame);
 
         //The other user joind
-        _this.server.on('joinUser', function(userData) {
-            _this._createUser(userData);
-        });
+        _this.server.on('joinUser', _this._onJoinUser);
+
+        //The other user updated
+        _this.server.on('updateUser', _this._onUpdateUser);
 
         //The other user left
-        _this.server.on('leaveUser', function(userId) {
-            _this._removeUser(userId);
-        });
+        _this.server.on('leaveUser', _this._onLeaveUser);
+
+        //The point was gotten by someone
+        _this.server.on('removePoint', _this._onRemovePoint);
+
+        //The point repleced by timer
+        _this.server.on('replacePoint', _this._onReplacePoint);
+
+    };
+
+    GameMain.prototype._onEnterFrame = function() {
+        var isGotPoint,
+            isKilled;
+
+        if (this.me.move()) {
+            isGotPoint = (this.point && this.point.intersect(this.me.chara)) ? true : false;
+            isKilled = this;
+
+            if (isGotPoint) {
+                this.me.getHacman();
+                this._removePoint();
+                this.server.removePoint();
+            }
+
+            this.server.updateUser({
+                id: this.server.data.me.id,
+                x: this.me.x,
+                y: this.me.y,
+                isHacman: isGotPoint
+            });
+        }
+    };
+
+    GameMain.prototype._onReplacePoint = function(pointData) {
+        this._removePoint();
+        this._createPoint(pointData);
+    };
+
+    GameMain.prototype._onJoinUser = function(userData) {
+        this._createUser(userData);
+    };
+
+    GameMain.prototype._onUpdateUser = function(userData) {
+        this.usersArray[userData.id].x = userData.x || this.usersArray[userData.id].x;
+        this.usersArray[userData.id].y = userData.y || this.usersArray[userData.id].y;
+
+        if (!this.usersArray[userData.id].isHacman && userData.isHacman) {
+
+            this.usersArray[userData.id].getHacman();
+
+            if (this.hacmanId) {
+                this.usersArray[this.hacmanId].loseHacman();
+            }
+            this.hacmanId = userData.id;
+        }
+    };
+
+    GameMain.prototype._onLeaveUser = function(userData) {
+        this._removeUser(userId);
     };
 
     GameMain.prototype._createPoint = function(pointData) {
@@ -140,7 +153,6 @@ HAC.define('GameMain', [
     };
 
     GameMain.prototype._removePoint = function() {
-        console.log(this.point)
         if (this.point) {
             this.point.remove();
         }

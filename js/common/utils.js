@@ -5,6 +5,7 @@ HAC.define('utils',[
 		object2Array,
 		readMap,
 		message,
+		bind,
 		$;
 
 	each = function(arg, callback) {
@@ -69,6 +70,18 @@ HAC.define('utils',[
 		alert(msg);
 	};
 
+	bind = function(scope) {
+		var handlers = Array.prototype.slice.call(arguments, 1);
+
+		each(handlers, function(handler) {
+			var func = scope[handler];
+
+			scope[handler] = function() {
+				func.apply(scope, arguments);
+			};
+		});
+	};
+
 	$ = function(selector) {
 		if (selector.charAt(0) === '#') {
 			return document.getElementById(selector.slice(1));
@@ -84,6 +97,7 @@ HAC.define('utils',[
 		object2Array: object2Array,
 		ascii2map: ascii2map,
 		message: message,
+		bind: bind,
 		$: $
 	};
 });
