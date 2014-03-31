@@ -15,50 +15,53 @@ io.sockets.on('connection', function (socket) {
 			name: userData.name,
 			charaId: userData.charaId,
 			isHacman: false,
-			x: 0,
-			y: 0
+			x: userData.x,
+			y: userData.y
 		};
 
 		users[newUser.id] = newUser;
 
-		socket.emit('accept', {
+		socket.emit('accepted', {
 			me: newUser,
 			users: users
 		});
 
-		socket.broadcast.emit('join', newUser);
+		socket.broadcast.emit('joinUser', newUser);
 	});
 
-	socket.on('update', function (data) {
+	socket.on('updateUser', function (data) {
 		users[data.id].x = data.x || users[data.id].x;
 		users[data.id].y = data.y || users[data.id].y;
 		if (data.isHacman) {
 			users[data.id].isHacman = data.isHacman;
-			if (hacmanId) {
+			if (hacmanId && users[hacmanId]) {
 				users[hacmanId].isHacman = false;
-				socket.broadcast.emit('update', users[hacmanId]);
+				socket.broadcast.emit('updateUser', users[hacmanId]);
 			}
 			hacmanId = data.id;
 		}
-		socket.broadcast.emit('update', data);
+		socket.broadcast.emit('updateUser', data);
 	});
 
 	socket.on('replacePoint', function (data) {
 		socket.broadcast.emit('replacePoint', data);
 	});
 
+	socket.on('removePoint', function () {
+		socket.broadcast.emit('removePoint');
+	});
+
 	socket.on('disconnect', function () {
-		socket.broadcast.emit('leave', socket.id);
+		socket.broadcast.emit('leaveUser', socket.id);
 		delete users[socket.id];
 	});
 
-	socket.emit('confirm');
-
+	socket.emit('connected');
 });
 
 setInterval(function() {
 	io.sockets.socket(getAnyUser()).emit('replacePoint');
-}, 5000)
+}, 5000);
 
 function getAnyUser() {
 	var user;

@@ -17,8 +17,8 @@ HAC.define('Hacman',[
             this.map = options.map;
 
             this.speed = 8;
-            this.x = options.x || settings.width;
-            this.y = options.y || settings.height;
+            this.x = options.x || 0;
+            this.y = options.y || 0;
 
             this.chara = new Sprite(settings.width, settings.height);
             this.chara.image = this.game.assets[Const.assets['chara0']];
@@ -37,17 +37,17 @@ HAC.define('Hacman',[
         move: function(){
             var isMoved = false;
 
-            if (this.game.input.left && this.map.hitTest(this.x-this.speed, this.y)) {
+            if (this.game.input.left && !this.map.hitTest(this.x-this.speed, this.y)) {
                 this.x -= this.speed;
                 isMoved = true;
-            } else if (this.game.input.right && this.map.hitTest(this.x+this.chara.width+this.speed/2, this.y)) {
+            } else if (this.game.input.right && !this.map.hitTest(this.x+this.chara.width+this.speed/2, this.y)) {
                 this.x += this.speed;
                 isMoved = true;
             }
-            if (this.game.input.up && this.y && this.map.hitTest(this.x, this.y-this.speed)) {
+            if (this.game.input.up && this.y && !this.map.hitTest(this.x, this.y-this.speed)) {
                 this.y -= this.speed;
                 isMoved = true;
-            } else if (this.game.input.down && this.map.hitTest(this.x, this.y+this.chara.height+this.speed/2)) {
+            } else if (this.game.input.down && !this.map.hitTest(this.x, this.y+this.chara.height+this.speed/2)) {
                 this.y += this.speed;
                 isMoved = true;
             }

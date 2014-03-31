@@ -14,52 +14,69 @@ HAC.define('Server',[
         this.events = {};
     };
 
-    Server.prototype.connect = function(options) {
+    Server.prototype.connect = function() {
         var _this = this;
 
         if (window.io) {
             _this.socket = io.connect(Const.server);
-            _this.socket.on('confirm', function() {
-                _this.socket.emit('entry', options);
+
+            _this.socket.on('connected', function() {
+                _this._onConnected();
             });
-            _this.socket.on('accept', function(data) {
+
+            _this.socket.on('accepted', function(data) {
                 _this.data = data;
-                _this._onAccept();
+                _this._onAccepted(data);
             });
         }
 
         return _this.socket;
     };
 
-    Server.prototype._onAccept = function() {
+    Server.prototype.entry = function(options) {
+        this.socket.emit('entry', options);
+    };
+
+    Server.prototype._onConnected = function(options) {
+        this.trigger('connected');
+    };
+
+    Server.prototype._onAccepted = function(data) {
         var _this = this;
 
-        _this.socket.on('join', function (userData) {
-            _this.trigger('join', userData);
+        _this.socket.on('joinUser', function (userData) {
+            _this.trigger('joinUser', userData);
         });
 
-        _this.socket.on('leave', function (userId) {
-            _this.trigger('leave', userId);
+        _this.socket.on('leaveUser', function (userId) {
+            _this.trigger('leaveUser', userId);
         });
 
-        _this.socket.on('update', function (userData) {
-            _this.trigger('update', userData);
+        _this.socket.on('updateUser', function (userData) {
+            _this.trigger('updateUser', userData);
         });
 
         _this.socket.on('replacePoint', function (pointData) {
             if (!pointData) {
-                pointData = _this.gameMain._getRandomPos();
+                pointData = _this.gameMain.getRandomPos();
                 _this.socket.emit('replacePoint', pointData);
             }
-            _this.trigger('replacePoint', pointData);  
+            _this.trigger('replacePoint', pointData);
         });
 
+        _this.socket.on('removePoint', function () {
+            _this.trigger('removePoint');
+        });
 
-        _this.trigger('accept', _this.data);
+        _this.trigger('accepted', data);
     };
 
-    Server.prototype.update = function(data) {
-        this.socket.emit('update', data);
+    Server.prototype.removePoint = function() {
+        this.socket.emit('removePoint');
+    };
+
+    Server.prototype.updateUser = function(data) {
+        this.socket.emit('updateUser', data);
     };
 
     Server.prototype.on = function(eventName, handler) {

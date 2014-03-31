@@ -4,13 +4,8 @@ HAC.main([
     'GameMain'
 ], function(utils, Server, GameMain) {
     var server,
-        game,
+        gameMain,
         $signin;
-
-    server = new Server();
-    server.on('accept', function(data) {
-        game = new GameMain(server);
-    });
 
     $signin = utils.$('#signin');
     $signin.addEventListener('submit', _onSubmit);
@@ -23,11 +18,32 @@ HAC.main([
         nickname = utils.$('#signin-nickname').value;
         chara = utils.$('[name="signin-chara[]"]:checked').value;
 
-        if (nickname) {
-            server.connect({
+        server = new Server();
+        gameMain = new GameMain(server);
+        server.gameMain = gameMain;
+
+        server.on('connected', function(data) {
+            gameMain.loadGame();
+        });
+
+        gameMain.onload = function() {
+            var initPos;
+            initPos = gameMain.getRandomPos();
+
+            server.entry({
                 name: nickname,
-                charaId: chara
+                charaId: chara,
+                x: initPos.x,
+                y: initPos.y
             });
+        };
+
+        server.on('accepted', function(data) {
+            gameMain.startGame();
+        });
+
+        if (nickname) {
+            server.connect();
         } else {
             utils.message('Please enter your nickname');
         }

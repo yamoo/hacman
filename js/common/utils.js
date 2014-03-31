@@ -59,7 +59,6 @@ HAC.define('utils',[
 			colMapArray.push(lineColMapArray);
 		});
 
-
 		return {
 			map: mapArray,
 			colMap: colMapArray
