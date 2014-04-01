@@ -26,7 +26,7 @@ HAC.main([
             gameMain.loadGame();
         });
 
-        gameMain.onload = function() {
+        gameMain.onLoad = function() {
             var initPos;
             initPos = gameMain.getRandomPos();
 
@@ -38,8 +38,20 @@ HAC.main([
             });
         };
 
+        gameMain.onGameOver = function(hacmanName) {
+            sendMessage('I was killed by <b>' + hacmanName + '</b>...', 'gameover');
+        };
+
         server.on('accepted', function(data) {
             gameMain.startGame();
+
+            utils.$('#ui-signin').remove();
+            utils.$('#ui-chat').style.display = 'block';
+            utils.$('#ui-chat-send').addEventListener('click', _onSendMessage);
+        });
+
+        server.on('sendMessage', function(data) {
+            addMessage(data);
         });
 
         if (nickname) {
@@ -47,6 +59,45 @@ HAC.main([
         } else {
             utils.message('Please enter your nickname');
         }
+    }
+
+    function _onSendMessage() {
+        var msg,
+            $input;
+
+        $input = utils.$('#ui-chat-input');
+        msg = $input.value;
+        $input.value = '';
+
+        sendMessage(msg);
+    }
+
+    function addMessage(data) {
+        var temp,
+            $item,
+            $container;
+
+        temp = utils.$('#ui-chat-item').innerHTML;
+        $container = utils.$('#ui-chat-list');
+        $item = document.createElement('div');
+        $item.innerHTML = utils.template(temp, data);
+        $container.insertBefore($item.children[0], $container.firstChild);
+    }
+
+    function sendMessage(msg, status) {
+        var data;
+
+        data = {
+            user: {
+                name: gameMain.me.name,
+                charaId: gameMain.me.charaId
+            },
+            date: new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds(),
+            msg: msg,
+            status: status || ''
+        };
+        addMessage(data);
+        server.sendMessage(data);
     }
 
 });

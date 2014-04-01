@@ -1,6 +1,7 @@
 var io,
 	users,
-	hacmanId;
+	hacmanId,
+	timerDuration = 5000;
 
 users = {};
 io = require('socket.io').listen(3000);
@@ -14,6 +15,7 @@ io.sockets.on('connection', function (socket) {
 			id: socket.id,
 			name: userData.name,
 			charaId: userData.charaId,
+			score: 0,
 			isHacman: false,
 			x: userData.x,
 			y: userData.y
@@ -23,32 +25,49 @@ io.sockets.on('connection', function (socket) {
 
 		socket.emit('accepted', {
 			me: newUser,
-			users: users
+			users: users,
+			hacmanId: hacmanId
 		});
 
 		socket.broadcast.emit('joinUser', newUser);
 	});
 
-	socket.on('updateUser', function (data) {
-		users[data.id].x = data.x || users[data.id].x;
-		users[data.id].y = data.y || users[data.id].y;
-		if (data.isHacman) {
-			users[data.id].isHacman = data.isHacman;
+	socket.on('updateUser', function (userData) {
+		var target = users[userData.id];
+
+		target.x = userData.x || target.x;
+		target.y = userData.y || target.y;
+		target.score = userData.score || target.score;
+
+        if (!target.isHacman && userData.isHacman) {
 			if (hacmanId && users[hacmanId]) {
 				users[hacmanId].isHacman = false;
-				socket.broadcast.emit('updateUser', users[hacmanId]);
 			}
-			hacmanId = data.id;
+			target.isHacman = true;
+			hacmanId = userData.id;
 		}
-		socket.broadcast.emit('updateUser', data);
+
+		socket.broadcast.emit('updateUser', userData);
 	});
 
-	socket.on('replacePoint', function (data) {
-		socket.broadcast.emit('replacePoint', data);
+	socket.on('loseUser', function (userId) {
+		socket.broadcast.emit('loseUser', userId);
+	});
+
+	socket.on('replacePoint', function (pointData) {
+		socket.broadcast.emit('replacePoint', pointData);
 	});
 
 	socket.on('removePoint', function () {
 		socket.broadcast.emit('removePoint');
+	});
+
+	socket.on('sendMessage', function (data) {
+		if (data.msg === '#reset') {
+			io.sockets.emit('system.reset');
+		} else {
+			socket.broadcast.emit('sendMessage', data);
+		}
 	});
 
 	socket.on('disconnect', function () {
@@ -60,8 +79,11 @@ io.sockets.on('connection', function (socket) {
 });
 
 setInterval(function() {
-	io.sockets.socket(getAnyUser()).emit('replacePoint');
-}, 5000);
+	var anyUserId = getAnyUser();
+	if (anyUserId) {
+		io.sockets.socket(anyUserId).emit('replacePoint');
+	}
+}, timerDuration);
 
 function getAnyUser() {
 	var user;

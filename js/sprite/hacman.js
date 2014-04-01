@@ -16,28 +16,36 @@ HAC.define('Hacman',[
             this.game = options.game;
             this.map = options.map;
 
-            this.isHacman = false;
-            this.speed = 8;
+            this.id = options.id;
+            this.name = options.name;
             this.x = options.x || 0;
             this.y = options.y || 0;
+            this.charaId = options.charaId;
+            this.score = options.score || 0;
+            this.isHacman = options.isHacman || false;
+            this.speed = 8;
 
             this.hacmanFace = new Sprite(settings.width, settings.height);
             this.hacmanFace.image = this.game.assets[Const.assets['chara0']];
             this.hacmanFace.frame = 0;
-            this.hacmanFace.visible = false;
 
             this.chara = new Sprite(settings.width, settings.height);
             this.chara.image = this.game.assets[Const.assets['chara0']];
             this.chara.frame = options.charaId;
 
             this.label = new Label();
-            this.label.text = options.name;
-            this.label.color = '#fff';
+            this.label.font = '14px sans-serif';
             this.label.x = this.chara.width;
+            this.label.color = options.color || '#fff';
+
+            if (!this.isHacman) {
+                this.hacmanFace.visible = false;
+            }
 
             this.addChild(this.hacmanFace);
             this.addChild(this.chara);
             this.addChild(this.label);
+            this.setLabel();
         },
 
         move: function(){
@@ -61,6 +69,15 @@ HAC.define('Hacman',[
             return isMoved;
         },
 
+        setLabel: function() {
+            this.label.text = this.name + ' (' + this.score + ')';
+        },
+
+        setScore: function(score) {
+            this.score = score;
+            this.setLabel();
+        },
+
         getHacman: function() {
             this.isHacman = true;
             this.hacmanFace.visible = true;
@@ -69,6 +86,10 @@ HAC.define('Hacman',[
         loseHacman: function() {
             this.isHacman = false;
             this.hacmanFace.visible = false;
+        },
+
+        dead: function() {
+            this.remove();
         }
     });
 

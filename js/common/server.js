@@ -48,12 +48,16 @@ HAC.define('Server',[
             _this.trigger('joinUser', userData);
         });
 
-        _this.socket.on('leaveUser', function (userId) {
-            _this.trigger('leaveUser', userId);
-        });
-
         _this.socket.on('updateUser', function (userData) {
             _this.trigger('updateUser', userData);
+        });
+
+        _this.socket.on('loseUser', function (userId) {
+            _this.trigger('loseUser', userId);
+        });
+
+        _this.socket.on('leaveUser', function (userId) {
+            _this.trigger('leaveUser', userId);
         });
 
         _this.socket.on('replacePoint', function (pointData) {
@@ -68,6 +72,14 @@ HAC.define('Server',[
             _this.trigger('removePoint');
         });
 
+        _this.socket.on('sendMessage', function (data) {
+            _this.trigger('sendMessage', data);
+        });
+
+        _this.socket.on('system.reset', function () {
+            location.reload(true);
+        });
+
         _this.trigger('accepted', data);
     };
 
@@ -75,8 +87,16 @@ HAC.define('Server',[
         this.socket.emit('removePoint');
     };
 
-    Server.prototype.updateUser = function(data) {
-        this.socket.emit('updateUser', data);
+    Server.prototype.updateUser = function(userData) {
+        this.socket.emit('updateUser', userData);
+    };
+
+    Server.prototype.loseUser = function(userId) {
+        this.socket.emit('loseUser', userId);
+    };
+
+    Server.prototype.sendMessage = function(data) {
+        this.socket.emit('sendMessage', data);
     };
 
     Server.prototype.on = function(eventName, handler) {
