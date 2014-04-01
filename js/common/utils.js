@@ -80,7 +80,7 @@ HAC.define('utils',[
             var func = scope[handler];
 
             scope[handler] = function() {
-                func.apply(scope, arguments);
+                return func.apply(scope, arguments);
             };
         });
     };

@@ -17,6 +17,7 @@ io.sockets.on('connection', function (socket) {
 			charaId: userData.charaId,
 			score: 0,
 			isHacman: false,
+			message: '',
 			x: userData.x,
 			y: userData.y
 		};
@@ -38,6 +39,7 @@ io.sockets.on('connection', function (socket) {
 		target.x = userData.x || target.x;
 		target.y = userData.y || target.y;
 		target.score = userData.score || target.score;
+		target.message = userData.message || target.message;
 
         if (!target.isHacman && userData.isHacman) {
 			if (hacmanId && users[hacmanId]) {
@@ -50,8 +52,9 @@ io.sockets.on('connection', function (socket) {
 		socket.broadcast.emit('updateUser', userData);
 	});
 
-	socket.on('loseUser', function (userId) {
-		socket.broadcast.emit('loseUser', userId);
+	socket.on('loseUser', function (data) {
+		socket.broadcast.emit('loseUser', data);
+		delete users[data.userId];
 	});
 
 	socket.on('replacePoint', function (pointData) {
@@ -71,8 +74,12 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect', function () {
-		socket.broadcast.emit('leaveUser', users[socket.id]);
-		delete users[socket.id];
+		var target = users[socket.id];
+
+		socket.broadcast.emit('leaveUser', socket.id);
+		if (target) {
+			delete users[socket.id];
+		}
 	});
 
 	socket.emit('connected');

@@ -1,7 +1,8 @@
 HAC.define('Hacman',[
     'utils',
-    'Const'
-], function(utils, Const) {
+    'Const',
+    'Comment'
+], function(utils, Const, Comment) {
     var Hacman, settings;
 
     settings = {
@@ -25,6 +26,10 @@ HAC.define('Hacman',[
             this.isHacman = options.isHacman || false;
             this.speed = 8;
 
+            this.message = options.message || '';
+            this.messageTimer = null;
+            this.messageTimerDuration = 1000;
+
             this.hacmanFace = new Sprite(settings.width, settings.height);
             this.hacmanFace.image = this.game.assets[Const.assets['chara0']];
             this.hacmanFace.frame = 0;
@@ -38,6 +43,11 @@ HAC.define('Hacman',[
             this.label.x = this.chara.width;
             this.label.color = options.color || '#fff';
 
+            this.comment = new Comment();
+            this.comment.setText(this.message);
+            this.comment.x = settings.width/2;
+            this.comment.y = this.chara.height + 0;
+
             if (!this.isHacman) {
                 this.hacmanFace.visible = false;
             }
@@ -45,6 +55,7 @@ HAC.define('Hacman',[
             this.addChild(this.hacmanFace);
             this.addChild(this.chara);
             this.addChild(this.label);
+            this.addChild(this.comment);
             this.setLabel();
         },
 
@@ -86,6 +97,26 @@ HAC.define('Hacman',[
         loseHacman: function() {
             this.isHacman = false;
             this.hacmanFace.visible = false;
+        },
+
+        setMessage: function(msg) {
+            var _this = this;
+
+            _this.message += msg;
+            this.setComment();
+
+            clearTimeout(this.messageTimer);
+            this.messageTimer = setTimeout(function() {
+                _this.server.updateUser({
+                    id: _this.id,
+                    message: _this.message
+                });
+                _this.message = '';
+            }, this.messageTimerDuration);
+        },
+
+        setComment: function(msg) {
+            this.comment.setText(msg || this.message);
         },
 
         dead: function() {

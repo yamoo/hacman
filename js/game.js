@@ -28,18 +28,6 @@ HAC.define('GameMain', [
         _this.game.scale = 1;
     };
 
-    GameMain.prototype.onLoadGame = function() {
-        //for override
-    };
-
-    GameMain.prototype.onLeaveGame = function() {
-        //for override
-    };
-
-    GameMain.prototype.onGameOver = function() {
-        //for override
-    };
-
     GameMain.prototype._initWorld = function() {
         this.usersArray = {};
         this.rootScene = new Scene();
@@ -51,24 +39,18 @@ HAC.define('GameMain', [
         this.game.pushScene(this.rootScene);
     };
 
-    GameMain.prototype.loadGame = function() {
-        this.game.start();
-    };
-
-    GameMain.prototype.startGame = function() {
-        this._main();
-    };
-
     GameMain.prototype._main = function() {
         var _this = this;
 
-        utils.bind(_this, '_onEnterFrame', '_onJoinUser', '_onUpdateUser', '_onLoseUser', '_onLeaveUser', '_onRemovePoint', '_onReplacePoint');
+        utils.bind(_this, '_onKeyPress', '_onEnterFrame', '_onJoinUser', '_onUpdateUser', '_onLoseUser', '_onLeaveUser', '_onRemovePoint', '_onReplacePoint');
 
         _this.hacmanId = _this.server.data.hacmanId;
-        _this.me = _this._createUser(_this.server.data.me);
+        _this.me = _this._onJoinUser(_this.server.data.me);
+        _this.me.server = _this.server;
         _this.me.label.color = '#ff0';
 
         //Init users
+console.log(_this.server.data.users)
         utils.each(_this.server.data.users, function(userData) {
             var user;
 
@@ -76,6 +58,8 @@ HAC.define('GameMain', [
                 _this._createUser(userData);
             }
         });
+
+        document.addEventListener('keypress', _this._onKeyPress);
 
         //Update my chara
         _this.me.addEventListener('enterframe', _this._onEnterFrame);
@@ -100,6 +84,12 @@ HAC.define('GameMain', [
 
     };
 
+    GameMain.prototype._onKeyPress = function(e) {
+        var chr = String.fromCharCode(e.which);
+
+        this.me.setMessage(chr);
+    };
+
     GameMain.prototype._onEnterFrame = function() {
         var hacmanUser,
             isGotPoint,
@@ -114,7 +104,7 @@ HAC.define('GameMain', [
                 score: hacmanUser.score+1
             });
             hacmanUser.setScore(hacmanUser.score+1);
-            this.gameOver();
+            this._gameOver();
         } else {
             if (this.me.move()) {
                 isGotPoint = (this.point && this.point.intersect(this.me.chara)) ? true : false;
@@ -150,7 +140,12 @@ HAC.define('GameMain', [
     };
 
     GameMain.prototype._onJoinUser = function(userData) {
-        this._createUser(userData);
+        var user;
+
+        user = this._createUser(userData);
+        this.showMessage('<b>' + userData.name + '</b> was joined.', 'join');
+
+        return user;
     };
 
     GameMain.prototype._onUpdateUser = function(userData) {
@@ -163,6 +158,10 @@ HAC.define('GameMain', [
             target.setScore(userData.score);
         }
 
+        if (userData.message && target.message !== userData.message) {
+            target.setComment(userData.message);
+        }
+
         if (!target.isHacman && userData.isHacman) {
             if (this.hacmanId && this.usersArray[this.hacmanId]) {
                 this.usersArray[this.hacmanId].loseHacman();
@@ -173,13 +172,21 @@ HAC.define('GameMain', [
         }
     };
 
-    GameMain.prototype._onLoseUser = function(userId) {
-        this._removeUser(userId);
+    GameMain.prototype._onLoseUser = function(data) {
+        var target = this.usersArray[data.userId],
+            killer = this.usersArray[data.killerId] || {name: 'unknown'};
+
+        if (target) {
+            this.showMessage('<b>' + target.name + '</b> was killed by <b>' + killer.name +'</b>.', 'killed');
+        }
+        this._removeUser(data.userId);
     };
 
-    GameMain.prototype._onLeaveUser = function(userData) {
-        this._removeUser(userData.id);
-        this.onLeaveGame(userData);
+    GameMain.prototype._onLeaveUser = function(userId) {
+        var target = this.usersArray[userId];
+
+        this.showMessage('<b>' + target.name + '</b> was left.', 'leave');
+        this._removeUser(userId);
     };
 
     GameMain.prototype._createPoint = function(pointData) {
@@ -213,6 +220,7 @@ HAC.define('GameMain', [
             charaId: userData.charaId,
             score: userData.score || 0,
             isHacman: userData.isHacman || false,
+            message: userData.message || '',
             x: userData.x,
             y: userData.y,
             map: this.map,
@@ -229,11 +237,41 @@ HAC.define('GameMain', [
         var user;
 
         user = this._getUser(userId);
-        this.users.removeChild(user);
+        if (user) {
+            this.users.removeChild(user);
+            delete this.usersArray[userId];
+        }
     };
 
     GameMain.prototype._getUser = function(userId) {
         return this.usersArray[userId];
+    };
+
+    GameMain.prototype._gameOver = function() {
+        var data = {
+            userId: this.me.id,
+            killerId: this.hacmanId
+        };
+
+        this.me.dead();
+        this.me.removeEventListener('enterframe');
+        this.server.loseUser(data);
+        this._onLoseUser(data);
+        this.rootScene.addChild(new End({
+            game: this.game
+        }));
+    };
+
+    GameMain.prototype.loadGame = function() {
+        this.game.start();
+    };
+
+    GameMain.prototype.onLoadGame = function() {
+        //for override
+    };
+
+    GameMain.prototype.startGame = function() {
+        this._main();
     };
 
     GameMain.prototype.getRandomPos = function() {
@@ -252,14 +290,8 @@ HAC.define('GameMain', [
         return pos;
     };
 
-    GameMain.prototype.gameOver = function() {
-        this.me.dead();
-        this.me.removeEventListener('enterframe');
-        this.server.loseUser(this.me.id);
-        this.rootScene.addChild(new End({
-            game: this.game
-        }));
-        this.onGameOver(this.usersArray[this.hacmanId].name);
+    GameMain.prototype.showMessage = function() {
+        //for override
     };
 
     return GameMain;

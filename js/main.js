@@ -13,7 +13,8 @@ HAC.main([
         var storage;
 
         if (_isIE()) {
-            utils.message('Sorry... we do not support IE. Please access via Chrome or Firefox.');
+            utils.message('Sorry... I know you love IE, but unfortunately, we do not support IE. Please access via Chrome or Firefox.');
+            location.href = 'http://www.play.com/';
         } else {
             $signin = utils.$('#signin');
             $nickname = utils.$('#signin-nickname');
@@ -56,6 +57,10 @@ HAC.main([
             gameMain.loadGame();
         });
 
+        gameMain.showMessage = function(msg, status) {
+            _showMessage(msg, status);
+        };
+
         gameMain.onLoadGame = function() {
             var initPos;
             initPos = gameMain.getRandomPos();
@@ -68,26 +73,16 @@ HAC.main([
             });
         };
 
-        gameMain.onLeaveGame = function(hacmanName) {
-            sendMessage('<b>' + nickname + '</b> was left.', 'leave');
-        };
-
-        gameMain.onGameOver = function(hacmanName) {
-            sendMessage('I was killed by <b>' + hacmanName + '</b>...', 'gameover');
-        };
-
         server.on('accepted', function(data) {
             gameMain.startGame();
 
             utils.$('#ui-signin').remove();
             utils.$('#ui-chat').style.display = 'block';
             utils.$('#ui-chat-send').addEventListener('click', _onSendMessage);
-
-            sendMessage('<b>' + nickname + '</b> was joined.', 'join');
         });
 
         server.on('sendMessage', function(data) {
-            addMessage(data);
+            _showMessage(data);
         });
 
         if (nickname) {
@@ -105,19 +100,7 @@ HAC.main([
         msg = $input.value;
         $input.value = '';
 
-        sendMessage(msg);
-    }
-
-    function addMessage(data) {
-        var temp,
-            $item,
-            $container;
-
-        temp = utils.$('#ui-chat-item').innerHTML;
-        $container = utils.$('#ui-chat-list');
-        $item = document.createElement('div');
-        $item.innerHTML = utils.template(temp, data);
-        $container.insertBefore($item.children[0], $container.firstChild);
+        _sendMessage(msg);
     }
 
     function _loadData() {
@@ -153,19 +136,32 @@ HAC.main([
         return isQuery;
     }
 
-    function sendMessage(msg, status) {
-        var data;
-
-        data = {
-            user: {
-                name: gameMain.me.name,
-                charaId: gameMain.me.charaId
-            },
+    function _getMessageHead(msg, status) {
+        return {
             date: new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds(),
             msg: msg,
             status: status || ''
         };
-        addMessage(data);
+    }
+
+    function _showMessage(msg, status) {
+        var temp,
+            data,
+            $item,
+            $container;
+
+        data = _getMessageHead(msg, status);
+        temp = utils.$('#ui-chat-item').innerHTML;
+        $container = utils.$('#ui-chat-list');
+        $item = document.createElement('div');
+        $item.innerHTML = utils.template(temp, data);
+        $container.insertBefore($item.children[0], $container.firstChild);
+    }
+
+    function _sendMessage(msg) {
+        var data;
+
+        data = _getMessageHead(msg);
         server.sendMessage(data);
     }
 

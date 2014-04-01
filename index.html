@@ -11,6 +11,9 @@
     .container {
       width: 500px;
     }
+    .jumbotron small {
+      font-size: 30%;
+    }
     .chara {
       display: inline-block;
       width: 32px;
@@ -64,7 +67,12 @@
     .chara14 {
       background-position: -448px 0;
     }
-
+    .chara15 {
+      background-position: -480px 0;
+    }
+    .chara16 {
+      background-position: -512px 0;
+    }
     #ui-chat {
       position: absolute;
       left: 768px;
@@ -82,7 +90,9 @@
 
     #ui-chat-list {
       height: 500px;
+      padding: 15px;
       overflow: scroll;
+      background-color: #fff;
     }
 
     #ui-chat-item {
@@ -94,7 +104,7 @@
 
   <div class="container" id="ui-signin">
     <div class="jumbotron">
-      <h1>Hacman <small>v0.2</small></h1>
+      <h1>Hacman <small>v0.2.1</small></h1>
       <p>Please sign in</p>
     </div>
     <form class="form-signin" role="form" id="signin">
@@ -139,14 +149,20 @@
         <label>
           <input type="radio" name="signin-chara[]" value="11" required> <i class="chara chara11"></i>
         </label>
-        <label class="chara-hidden">
+        <label>
           <input type="radio" name="signin-chara[]" value="12" required> <i class="chara chara12"></i>
         </label>
-        <label class="chara-hidden">
+        <label>
           <input type="radio" name="signin-chara[]" value="13" required> <i class="chara chara13"></i>
         </label>
-        <label class="chara-hidden">
+        <label>
           <input type="radio" name="signin-chara[]" value="14" required> <i class="chara chara14"></i>
+        </label>
+        <label class="chara-hidden">
+          <input type="radio" name="signin-chara[]" value="15" required> <i class="chara chara15"></i>
+        </label>
+        <label class="chara-hidden">
+          <input type="radio" name="signin-chara[]" value="16" required> <i class="chara chara16"></i>
         </label>
         <label class="chara-hidden">
           <input type="radio" name="signin-chara[]" value="0" required> <i class="chara"></i>
@@ -167,7 +183,7 @@
   </div><!-- /container -->
 
   <div id="ui-chat">
-    <ul class="list-group" id="ui-chat-list"></ul>
+    <div id="ui-chat-list"></div>
     <div class="input-group" id="ui-chat-entry">
       <input type="text" class="form-control" id="ui-chat-input">
       <span class="input-group-btn">
@@ -175,27 +191,20 @@
       </span>
     </div><!-- /input-group -->
   </div>
-list-group-item-success
+
   <script type="text/template" id="ui-chat-item">
     <% if (status === 'join') { %>
-      <li class="list-group-item list-group-item-success">
+      <p class="text-success">
     <% } else if (status === 'leave') {  %>
-      <li class="list-group-item list-group-item-warning">
-    <% } else if (status === 'gameover') {  %>
-      <li class="list-group-item list-group-item-danger">
+      <p class="text-warning">
+    <% } else if (status === 'killed') {  %>
+      <p class="text-danger">
     <% } else { %>
-      <li class="list-group-item">
+      <p>
     <% } %>
-      <div class="media">
-        <div class="pull-left">
-          <span class="media-object chara chara<%= user.charaId %>"></span>
-        </div>
-        <div class="media-body">
-          <h5 class="media-heading"><%= user.name %> <small>(<%= date %>)</small></h5>
-          <%= msg %>
-        </div>
-      </div>
-    </li>
+        <span class="label label-default"><%= date %></span>
+        <%= msg %>
+    </p>
   </script>
 
   <!--<script src="http://VLB12-28:3000/socket.io/socket.io.js"></script>-->
@@ -207,6 +216,7 @@ list-group-item-success
   <script src="js/common/server.js"></script>
   <script src="js/map/basemapData.js"></script>
   <script src="js/map/basemap.js"></script>
+  <script src="js/sprite/comment.js"></script>
   <script src="js/sprite/hacman.js"></script>
   <script src="js/sprite/point.js"></script>
   <script src="js/sprite/end.js"></script>

@@ -52,12 +52,12 @@ HAC.define('Server',[
             _this.trigger('updateUser', userData);
         });
 
-        _this.socket.on('loseUser', function (userId) {
-            _this.trigger('loseUser', userId);
+        _this.socket.on('loseUser', function (data) {
+            _this.trigger('loseUser', data);
         });
 
-        _this.socket.on('leaveUser', function (userData) {
-            _this.trigger('leaveUser', userData);
+        _this.socket.on('leaveUser', function (userId) {
+            _this.trigger('leaveUser', userId);
         });
 
         _this.socket.on('replacePoint', function (pointData) {
