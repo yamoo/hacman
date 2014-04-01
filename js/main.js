@@ -26,6 +26,12 @@ HAC.main([
                 $nickname.value = storage.nickname;
                 utils.$('[name="signin-chara[]"][value="'+storage.charaId+'"]').checked = true;
             }
+
+            if (_checkQuery('mode=secret')) {
+                utils.each(utils.$('.chara-hidden'), function($el) {
+                    $el.style.visibility = 'visible';
+                });
+            }
         }
     }
 
@@ -135,6 +141,16 @@ HAC.main([
         }
 
         return isIE;
+    }
+
+    function _checkQuery(query) {
+        var isQuery;
+
+        if (new RegExp(query).test(location.search)) {
+            isQuery = true;
+        }
+
+        return isQuery;
     }
 
     function sendMessage(msg, status) {

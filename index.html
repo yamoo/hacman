@@ -19,6 +19,9 @@
       background-image: url(img/chara0.png);
       background-repeat: no-repeat;
     }
+    .chara-hidden {
+      visibility: hidden;
+    }
     .chara1 {
       background-position: -32px 0;
     }
@@ -52,6 +55,15 @@
     .chara11 {
       background-position: -352px 0;
     }
+    .chara12 {
+      background-position: -384px 0;
+    }
+    .chara13 {
+      background-position: -416px 0;
+    }
+    .chara14 {
+      background-position: -448px 0;
+    }
 
     #ui-chat {
       position: absolute;
@@ -82,7 +94,7 @@
 
   <div class="container" id="ui-signin">
     <div class="jumbotron">
-      <h1>Hacman <small>v0.1</small></h1>
+      <h1>Hacman <small>v0.2</small></h1>
       <p>Please sign in</p>
     </div>
     <form class="form-signin" role="form" id="signin">
@@ -126,6 +138,18 @@
         </label>
         <label>
           <input type="radio" name="signin-chara[]" value="11" required> <i class="chara chara11"></i>
+        </label>
+        <label class="chara-hidden">
+          <input type="radio" name="signin-chara[]" value="12" required> <i class="chara chara12"></i>
+        </label>
+        <label class="chara-hidden">
+          <input type="radio" name="signin-chara[]" value="13" required> <i class="chara chara13"></i>
+        </label>
+        <label class="chara-hidden">
+          <input type="radio" name="signin-chara[]" value="14" required> <i class="chara chara14"></i>
+        </label>
+        <label class="chara-hidden">
+          <input type="radio" name="signin-chara[]" value="0" required> <i class="chara"></i>
         </label>
       </div>
       <button class="btn btn-lg btn-primary btn-block" type="submit">Play</button>
