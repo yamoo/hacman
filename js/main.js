@@ -1,22 +1,46 @@
 HAC.main([
+    'Const',
     'utils',
     'Server',
     'GameMain'
-], function(utils, Server, GameMain) {
+], function(Const, utils, Server, GameMain) {
     var server,
         gameMain,
-        $signin;
+        $signin,
+        $nickname;
 
-    $signin = utils.$('#signin');
-    $signin.addEventListener('submit', _onSubmit);
+    function _init () {
+        var storage;
+
+        if (_isIE()) {
+            utils.message('Sorry... we do not support IE. Please access via Chrome or Firefox.');
+        } else {
+            $signin = utils.$('#signin');
+            $nickname = utils.$('#signin-nickname');
+
+            $signin.addEventListener('submit', _onSubmit);
+
+            storage = _loadData();
+
+            if (storage) {
+                $nickname.value = storage.nickname;
+                utils.$('[name="signin-chara[]"][value="'+storage.charaId+'"]').checked = true;
+            }
+        }
+    }
 
     function _onSubmit(e) {
         var nickname,
-            chara;
+            charaId;
 
         e.preventDefault();
-        nickname = utils.$('#signin-nickname').value;
-        chara = utils.$('[name="signin-chara[]"]:checked').value;
+        nickname = $nickname.value;
+        charaId = utils.$('[name="signin-chara[]"]:checked').value;
+
+        _saveData({
+            nickname: nickname,
+            charaId: charaId
+        });
 
         server = new Server();
         gameMain = new GameMain(server);
@@ -32,7 +56,7 @@ HAC.main([
 
             server.entry({
                 name: nickname,
-                charaId: chara,
+                charaId: charaId,
                 x: initPos.x,
                 y: initPos.y
             });
@@ -90,6 +114,29 @@ HAC.main([
         $container.insertBefore($item.children[0], $container.firstChild);
     }
 
+    function _loadData() {
+        var data;
+
+        data = localStorage.getItem(Const.storage);
+        if (data) {
+            return JSON.parse(data);
+        }
+    }
+
+    function _saveData(data) {
+        localStorage.setItem(Const.storage, JSON.stringify(data));
+    }
+
+    function _isIE() {
+        var isIE;
+
+        if (/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
+            isIE = true;
+        }
+
+        return isIE;
+    }
+
     function sendMessage(msg, status) {
         var data;
 
@@ -106,4 +153,5 @@ HAC.main([
         server.sendMessage(data);
     }
 
+    _init();
 });
