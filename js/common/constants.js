@@ -2,8 +2,8 @@ HAC.define('Const',[
 ], function() {
 
 	return {
-		//server: 'http://VLB12-28:3000',
-		server: 'http://localhost:3000',
+		server: 'http://VLB12-28:3000',
+		//server: 'http://localhost:3000',
 		world: {
 			tile: 32,
 			width: 24*32,
