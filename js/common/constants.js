@@ -4,6 +4,7 @@ HAC.define('Const',[
 	return {
 		//server: 'http://VLB12-28:3000',
 		server: 'http://localhost:3000',
+		storage: 'hacman_data_v0.1',
 		world: {
 			tile: 32,
 			width: 24*32,

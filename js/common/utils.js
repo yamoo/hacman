@@ -14,7 +14,9 @@ HAC.define('utils',[
 
         if (arg instanceof Object) {
             for (i in arg) {
-                callback.apply(arg[i], [arg[i], i]);
+                if (arg.hasOwnProperty(i) && i !== 'length') {
+                    callback.apply(arg[i], [arg[i], i]);
+                }
             }
         } else {
             for (i=0;i<arg.length;i++) {
