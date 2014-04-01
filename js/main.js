@@ -26,7 +26,7 @@ HAC.main([
             gameMain.loadGame();
         });
 
-        gameMain.onLoad = function() {
+        gameMain.onLoadGame = function() {
             var initPos;
             initPos = gameMain.getRandomPos();
 
@@ -36,6 +36,10 @@ HAC.main([
                 x: initPos.x,
                 y: initPos.y
             });
+        };
+
+        gameMain.onLeaveGame = function(hacmanName) {
+            sendMessage('<b>' + nickname + '</b> was left.', 'leave');
         };
 
         gameMain.onGameOver = function(hacmanName) {
@@ -48,6 +52,8 @@ HAC.main([
             utils.$('#ui-signin').remove();
             utils.$('#ui-chat').style.display = 'block';
             utils.$('#ui-chat-send').addEventListener('click', _onSendMessage);
+
+            sendMessage('<b>' + nickname + '</b> was joined.', 'join');
         });
 
         server.on('sendMessage', function(data) {

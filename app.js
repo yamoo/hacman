@@ -71,7 +71,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect', function () {
-		socket.broadcast.emit('leaveUser', socket.id);
+		socket.broadcast.emit('leaveUser', users[socket.id]);
 		delete users[socket.id];
 	});
 

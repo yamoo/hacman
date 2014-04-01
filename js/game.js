@@ -22,13 +22,17 @@ HAC.define('GameMain', [
         _this.game.preload.apply(_this.game, utils.object2Array(Const.assets));
         _this.game.onload = function() {
             _this._initWorld.apply(_this);
-            _this.onLoad();
+            _this.onLoadGame();
         };
         _this.game.fps = 30;
         _this.game.scale = 1;
     };
 
-    GameMain.prototype.onLoad = function() {
+    GameMain.prototype.onLoadGame = function() {
+        //for override
+    };
+
+    GameMain.prototype.onLeaveGame = function() {
         //for override
     };
 
@@ -109,7 +113,7 @@ HAC.define('GameMain', [
                 id: this.hacmanId,
                 score: hacmanUser.score+1
             });
-            hacmanUser.setScore(hacmanUser.score+1);         
+            hacmanUser.setScore(hacmanUser.score+1);
             this.gameOver();
         } else {
             if (this.me.move()) {
@@ -173,8 +177,9 @@ HAC.define('GameMain', [
         this._removeUser(userId);
     };
 
-    GameMain.prototype._onLeaveUser = function(userId) {
-        this._removeUser(userId);
+    GameMain.prototype._onLeaveUser = function(userData) {
+        this._removeUser(userData.id);
+        this.onLeaveGame(userData);
     };
 
     GameMain.prototype._createPoint = function(pointData) {

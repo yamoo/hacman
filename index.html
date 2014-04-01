@@ -151,9 +151,17 @@
       </span>
     </div><!-- /input-group -->
   </div>
-
+list-group-item-success
   <script type="text/template" id="ui-chat-item">
-    <li class="list-group-item <%= (status === 'gameover') ? 'list-group-item-danger' : '' %>">
+    <% if (status === 'join') { %>
+      <li class="list-group-item list-group-item-success">
+    <% } else if (status === 'leave') {  %>
+      <li class="list-group-item list-group-item-warning">
+    <% } else if (status === 'gameover') {  %>
+      <li class="list-group-item list-group-item-danger">
+    <% } else { %>
+      <li class="list-group-item">
+    <% } %>
       <div class="media">
         <div class="pull-left">
           <span class="media-object chara chara<%= user.charaId %>"></span>
