@@ -1,9 +1,54 @@
 var io,
+	utils,
+	itemList,
 	users,
+	items,
+	observers,
+	maxItemNum = 5,
 	hacmanId,
 	timerDuration = 5000;
 
+itemList = [{
+	class: 'Point',
+	frame: 0,
+	abilities: {
+		hacman: true,
+		sick: false
+	}
+}, {
+	class: 'Kick',
+	frame: 1,
+	abilities: {
+		kick: true,
+		sick: false
+	}
+}, {
+	class: 'Dash',
+	frame: 2,
+	abilities: {
+		speed: 16,
+		sick: false
+	}
+}, {
+	class: 'Devil',
+	frame: 3,
+	abilities: {
+		speed: 2,
+		hacman: false,
+		sick: true
+	}
+}, {
+	class: 'Drug',
+	frame: 4,
+	abilities: {
+		sick: false
+	}
+}];
 users = {};
+observers = {};
+items = {};
+
+utils = require('./js/common/utils');
 io = require('socket.io').listen(3000);
 
 io.sockets.on('connection', function (socket) {
@@ -16,7 +61,8 @@ io.sockets.on('connection', function (socket) {
 			name: userData.name,
 			charaId: userData.charaId,
 			score: 0,
-			isHacman: false,
+			message: '',
+			item: {},
 			x: userData.x,
 			y: userData.y
 		};
@@ -26,6 +72,7 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('accepted', {
 			me: newUser,
 			users: users,
+			items: items,
 			hacmanId: hacmanId
 		});
 
@@ -35,31 +82,48 @@ io.sockets.on('connection', function (socket) {
 	socket.on('updateUser', function (userData) {
 		var target = users[userData.id];
 
-		target.x = userData.x || target.x;
-		target.y = userData.y || target.y;
-		target.score = userData.score || target.score;
+        utils.update(target.x, userData.x, function(val) {
+            target.x = val;
+        });
+        utils.update(target.y, userData.y, function(val) {
+            target.y = val;
+        });
+        utils.update(target.score, userData.score, function(val) {
+            target.score = val;
+        });
+        utils.update(target.message, userData.message, function(val) {
+            target.message = val;
+        });
 
-        if (!target.isHacman && userData.isHacman) {
-			if (hacmanId && users[hacmanId]) {
-				users[hacmanId].isHacman = false;
+        if (!utils.isEmpty(userData.item)) {
+            target.item = utils.extend(target.item, userData.item);
+
+			if (target.item.hacman) {
+				if (hacmanId && users[hacmanId]) {
+					users[hacmanId].item.hacman = false;
+					socket.broadcast.emit('updateUser', users[hacmanId]);
+				}
+				hacmanId = target.id;
 			}
-			target.isHacman = true;
-			hacmanId = userData.id;
 		}
 
 		socket.broadcast.emit('updateUser', userData);
 	});
 
-	socket.on('loseUser', function (userId) {
-		socket.broadcast.emit('loseUser', userId);
+	socket.on('loseUser', function (data) {
+		socket.broadcast.emit('loseUser', data);
+		observers[data.userId] = users[data.userId];
+		delete users[data.userId];
 	});
 
-	socket.on('replacePoint', function (pointData) {
-		socket.broadcast.emit('replacePoint', pointData);
+	socket.on('createItem', function (itemData) {
+		items[itemData.id] = itemData;
+		socket.broadcast.emit('createItem', itemData);
 	});
 
-	socket.on('removePoint', function () {
-		socket.broadcast.emit('removePoint');
+	socket.on('removeItem', function (itemId) {
+		socket.broadcast.emit('removeItem', itemId);
+		delete items[itemId];
 	});
 
 	socket.on('sendMessage', function (data) {
@@ -71,8 +135,22 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect', function () {
-		socket.broadcast.emit('leaveUser', users[socket.id]);
-		delete users[socket.id];
+		var target = users[socket.id],
+			observer = observers[socket.id];
+
+		socket.broadcast.emit('leaveUser', socket.id);
+
+		if (target) {
+			delete users[socket.id];
+		}
+
+		if (observer) {
+			delete observers[socket.id];
+		}
+
+		if (socket.id === hacmanId) {
+			hacmanId = null;
+		}
 	});
 
 	socket.emit('connected');
@@ -80,10 +158,22 @@ io.sockets.on('connection', function (socket) {
 
 setInterval(function() {
 	var anyUserId = getAnyUser();
-	if (anyUserId) {
-		io.sockets.socket(anyUserId).emit('replacePoint');
+
+	if ((utils.length(items) < maxItemNum) && anyUserId) {
+		io.sockets.socket(anyUserId).emit('createItem', getRandomItem());
 	}
 }, timerDuration);
+
+function getRandomItem() {
+	var item = itemList[Math.floor(Math.random() * itemList.length)];
+
+	item.id = getUniqueId('item');
+	return item;
+}
+
+function getUniqueId(prefix) {
+	return (prefix || '') + new Date().getTime();
+}
 
 function getAnyUser() {
 	var user;

@@ -1,31 +1,39 @@
 (function() {
-	var module,
+	var mod,
 		define,
-		main;
+		main,
+		exp;
 
-	module = function(dependences, callback) {
+	mod = function(dependences, callback) {
 		var i,
-			modules;
+			mods;
 
-		modules = [];
+		mods = [];
 
 		for (i=0; i<dependences.length; i++) {
-			modules.push(HAC[dependences[i]]);
+			mods.push(((typeof window === 'undefined') ? module.exports : window.HAC)[dependences[i]]);
 		}
 
-		return callback.apply(null, modules);
+		return callback.apply(null, mods);
 	};
 
 	define = function(name, dependences, callback) {
-		HAC[name] = module(dependences, callback);
+		((typeof window === 'undefined') ? module.exports : window.HAC)[name] = mod(dependences, callback);
 	};
 
 	main = function(dependences, callback) {
-		module(dependences, callback);
+		mod(dependences, callback);
 	};
 
-	window.HAC = {
+	exp = {
 		define: define,
 		main: main
 	};
+
+	if (typeof window === 'undefined') {
+		module.exports = exp;
+	} else {
+		window.HAC = exp;
+	}
+
 })();

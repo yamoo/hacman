@@ -7,13 +7,15 @@ HAC.main([
     var server,
         gameMain,
         $signin,
-        $nickname;
+        $nickname,
+        secretCode = 'mode=vip';
 
     function _init () {
         var storage;
 
         if (_isIE()) {
-            utils.message('Sorry... we do not support IE. Please access via Chrome or Firefox.');
+            utils.message(Const.message.error.ie);
+            location.href = Const.link.redirect;
         } else {
             $signin = utils.$('#signin');
             $nickname = utils.$('#signin-nickname');
@@ -27,7 +29,7 @@ HAC.main([
                 utils.$('[name="signin-chara[]"][value="'+storage.charaId+'"]').checked = true;
             }
 
-            if (_checkQuery('mode=secret')) {
+            if (_checkQuery(secretCode)) {
                 utils.each(utils.$('.chara-hidden'), function($el) {
                     $el.style.visibility = 'visible';
                 });
@@ -41,7 +43,7 @@ HAC.main([
 
         e.preventDefault();
         nickname = $nickname.value;
-        charaId = utils.$('[name="signin-chara[]"]:checked').value;
+        charaId = utils.$('[name="signin-chara[]"]:checked').value - 0;
 
         _saveData({
             nickname: nickname,
@@ -56,6 +58,10 @@ HAC.main([
             gameMain.loadGame();
         });
 
+        gameMain.showMessage = function(msg, status) {
+            _showMessage(msg, status);
+        };
+
         gameMain.onLoadGame = function() {
             var initPos;
             initPos = gameMain.getRandomPos();
@@ -68,56 +74,20 @@ HAC.main([
             });
         };
 
-        gameMain.onLeaveGame = function(hacmanName) {
-            sendMessage('<b>' + nickname + '</b> was left.', 'leave');
-        };
-
-        gameMain.onGameOver = function(hacmanName) {
-            sendMessage('I was killed by <b>' + hacmanName + '</b>...', 'gameover');
-        };
-
         server.on('accepted', function(data) {
             gameMain.startGame();
 
             utils.$('#ui-signin').remove();
             utils.$('#ui-chat').style.display = 'block';
-            utils.$('#ui-chat-send').addEventListener('click', _onSendMessage);
-
-            sendMessage('<b>' + nickname + '</b> was joined.', 'join');
         });
 
         server.on('sendMessage', function(data) {
-            addMessage(data);
+            _showMessage(data);
         });
 
         if (nickname) {
             server.connect();
-        } else {
-            utils.message('Please enter your nickname');
         }
-    }
-
-    function _onSendMessage() {
-        var msg,
-            $input;
-
-        $input = utils.$('#ui-chat-input');
-        msg = $input.value;
-        $input.value = '';
-
-        sendMessage(msg);
-    }
-
-    function addMessage(data) {
-        var temp,
-            $item,
-            $container;
-
-        temp = utils.$('#ui-chat-item').innerHTML;
-        $container = utils.$('#ui-chat-list');
-        $item = document.createElement('div');
-        $item.innerHTML = utils.template(temp, data);
-        $container.insertBefore($item.children[0], $container.firstChild);
     }
 
     function _loadData() {
@@ -153,19 +123,31 @@ HAC.main([
         return isQuery;
     }
 
-    function sendMessage(msg, status) {
-        var data;
-
-        data = {
-            user: {
-                name: gameMain.me.name,
-                charaId: gameMain.me.charaId
-            },
-            date: new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds(),
+    function _getMessageHead(msg, status) {
+        return {
             msg: msg,
             status: status || ''
         };
-        addMessage(data);
+    }
+
+    function _showMessage(msg, status) {
+        var temp,
+            data,
+            $item,
+            $container;
+
+        data = _getMessageHead(msg, status);
+        temp = utils.$('#ui-chat-item').innerHTML;
+        $container = utils.$('#ui-chat-list');
+        $item = document.createElement('div');
+        $item.innerHTML = utils.template(temp, data);
+        $container.insertBefore($item.children[0], $container.firstChild);
+    }
+
+    function _sendMessage(msg) {
+        var data;
+
+        data = _getMessageHead(msg);
         server.sendMessage(data);
     }
 

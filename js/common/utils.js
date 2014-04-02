@@ -1,13 +1,19 @@
-HAC.define('utils',[
-    'Const'
-], function(Const) {
+(function() {
+    return (typeof window === 'undefined') ? require('./hac') : window.HAC;
+})().define('utils',[
+], function() {
     var each,
+        length,
         object2Array,
         readMap,
         message,
         bind,
+        extend,
         template,
-        $;
+        isEqual,
+        isEmpty,
+        $,
+        exp;
 
     each = function(arg, callback) {
         var i;
@@ -23,6 +29,20 @@ HAC.define('utils',[
                 callback.apply(arg[i], [arg[i], i]);
             }
         }
+    };
+
+    length = function(arg) {
+        var length = 0;
+
+        if (arg instanceof Object) {
+            each(arg, function() {
+                length++;
+            });
+        } else {
+            length = arg.length;
+        }
+
+        return length;
     };
 
     object2Array = function(object) {
@@ -80,9 +100,17 @@ HAC.define('utils',[
             var func = scope[handler];
 
             scope[handler] = function() {
-                func.apply(scope, arguments);
+                return func.apply(scope, arguments);
             };
         });
+    };
+
+    extend = function(object, args) {
+        each(args, function(value, key) {
+            object[key] = value;
+        });
+
+        return object;
     };
 
     template = function (tmpl, data) {
@@ -124,6 +152,10 @@ HAC.define('utils',[
                     source.push('__t.push(\'' + tmpl + '\');');
                 }
 
+                if (index < tmpl.length) {
+                    source.push('__t.push(\'' + tmpl.slice(index).replace(/\n/g, '') + '\');');
+                }
+
                 source = 'var __t=[];with(__d||{}){' + source.join('\n') + '};return __t.join(\'\');';
 
                 return new Function('__d', source).apply(null, [data]);
@@ -131,6 +163,20 @@ HAC.define('utils',[
         };
 
         return _methods.render();
+    };
+
+    isEmpty = function(val) {
+        return ((val === undefined) || (val === null) || (val === 0) || (val === '') || (length(val) === 0)) ? true : false;
+    };
+
+    isEqual = function(a, b) {
+        return (!isEmpty(a) && (a === b )) ? true : false;
+    };
+
+    update = function(a, b, callback) {
+        if (!isEmpty(b) && !isEqual(a, b) && (typeof callback === 'function')) {
+            callback(b);
+        }
     };
 
     $ = function(selector) {
@@ -143,13 +189,24 @@ HAC.define('utils',[
         }
     };
 
-    return {
+    exp = {
         each: each,
+        length: length,
         object2Array: object2Array,
         ascii2map: ascii2map,
         message: message,
         bind: bind,
+        extend: extend,
         template: template,
+        isEmpty: isEmpty,
+        isEqual: isEqual,
+        update: update,
         $: $
     };
+
+    if (typeof window === 'undefined') {
+        module.exports = exp;
+    }
+
+    return exp;
 });

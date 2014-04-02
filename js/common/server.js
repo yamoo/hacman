@@ -52,24 +52,29 @@ HAC.define('Server',[
             _this.trigger('updateUser', userData);
         });
 
-        _this.socket.on('loseUser', function (userId) {
-            _this.trigger('loseUser', userId);
+        _this.socket.on('loseUser', function (data) {
+            _this.trigger('loseUser', data);
         });
 
-        _this.socket.on('leaveUser', function (userData) {
-            _this.trigger('leaveUser', userData);
+        _this.socket.on('leaveUser', function (userId) {
+            _this.trigger('leaveUser', userId);
         });
 
-        _this.socket.on('replacePoint', function (pointData) {
-            if (!pointData) {
-                pointData = _this.gameMain.getRandomPos();
-                _this.socket.emit('replacePoint', pointData);
+        _this.socket.on('createItem', function (itemData) {
+            var pos;
+
+            if (!itemData.x) {
+                pos = _this.gameMain.getRandomPos();
+                itemData.x = pos.x;
+                itemData.y = pos.y;
+                _this.socket.emit('createItem', itemData);
             }
-            _this.trigger('replacePoint', pointData);
+
+            _this.trigger('createItem', itemData);
         });
 
-        _this.socket.on('removePoint', function () {
-            _this.trigger('removePoint');
+        _this.socket.on('removeItem', function (itemId) {
+            _this.trigger('removeItem', itemId);
         });
 
         _this.socket.on('sendMessage', function (data) {
@@ -83,16 +88,19 @@ HAC.define('Server',[
         _this.trigger('accepted', data);
     };
 
-    Server.prototype.removePoint = function() {
-        this.socket.emit('removePoint');
+    Server.prototype.removeItem = function(itemId) {
+        this.socket.emit('removeItem', itemId);
+        this.trigger('removeItem', itemId);
     };
 
     Server.prototype.updateUser = function(userData) {
         this.socket.emit('updateUser', userData);
+        this.trigger('updateUser', userData);
     };
 
     Server.prototype.loseUser = function(userId) {
         this.socket.emit('loseUser', userId);
+        this.trigger('loseUser', userId);
     };
 
     Server.prototype.sendMessage = function(data) {

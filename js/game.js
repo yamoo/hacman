@@ -3,9 +3,9 @@ HAC.define('GameMain', [
     'utils',
     'BaseMap',
     'Hacman',
-    'Point',
+    'Item',
     'End'
-], function(Const, utils, BaseMap, Hacman, Point, End) {
+], function(Const, utils, BaseMap, Hacman, Item, End) {
     var GameMain;
 
     GameMain = function(server) {
@@ -28,44 +28,39 @@ HAC.define('GameMain', [
         _this.game.scale = 1;
     };
 
-    GameMain.prototype.onLoadGame = function() {
-        //for override
-    };
-
-    GameMain.prototype.onLeaveGame = function() {
-        //for override
-    };
-
-    GameMain.prototype.onGameOver = function() {
-        //for override
-    };
-
     GameMain.prototype._initWorld = function() {
         this.usersArray = {};
+        this.observersArray = {};
+        this.itemsArray = {};
         this.rootScene = new Scene();
         this.map = new BaseMap(this.game);
-        this.users = new Group();
+        this.usersLayer = new Group();
+        this.itemsLayer = new Group();
 
         this.rootScene.addChild(this.map);
-        this.rootScene.addChild(this.users);
+        this.rootScene.addChild(this.itemsLayer);
+        this.rootScene.addChild(this.usersLayer);
         this.game.pushScene(this.rootScene);
-    };
-
-    GameMain.prototype.loadGame = function() {
-        this.game.start();
-    };
-
-    GameMain.prototype.startGame = function() {
-        this._main();
     };
 
     GameMain.prototype._main = function() {
         var _this = this;
 
-        utils.bind(_this, '_onEnterFrame', '_onJoinUser', '_onUpdateUser', '_onLoseUser', '_onLeaveUser', '_onRemovePoint', '_onReplacePoint');
+        utils.bind(
+            _this,
+            '_onKeyPress',
+            '_onEnterFrame',
+            '_onJoinUser',
+            '_onUpdateUser',
+            '_onLoseUser',
+            '_onLeaveUser',
+            '_onCreateItem',
+            '_onRemoveItem'
+        );
 
         _this.hacmanId = _this.server.data.hacmanId;
-        _this.me = _this._createUser(_this.server.data.me);
+        _this.me = _this._onJoinUser(_this.server.data.me);
+        _this.me.server = _this.server;
         _this.me.label.color = '#ff0';
 
         //Init users
@@ -76,6 +71,13 @@ HAC.define('GameMain', [
                 _this._createUser(userData);
             }
         });
+
+        utils.each(_this.server.data.items, function(itemData) {
+            _this._createItem(itemData);
+        });
+
+        //keybind
+        document.addEventListener('keypress', _this._onKeyPress);
 
         //Update my chara
         _this.me.addEventListener('enterframe', _this._onEnterFrame);
@@ -92,115 +94,211 @@ HAC.define('GameMain', [
         //The other user left
         _this.server.on('leaveUser', _this._onLeaveUser);
 
-        //The point was gotten by someone
-        _this.server.on('removePoint', _this._onRemovePoint);
+        //The item created by timer
+        _this.server.on('createItem', _this._onCreateItem);
 
-        //The point repleced by timer
-        _this.server.on('replacePoint', _this._onReplacePoint);
+        //The item was gotten by someone
+        _this.server.on('removeItem', _this._onRemoveItem);
+    };
 
+    GameMain.prototype._onKeyPress = function(e) {
+        var chr = String.fromCharCode(e.which);
+
+        this.me.setMessage(chr);
     };
 
     GameMain.prototype._onEnterFrame = function() {
         var hacmanUser,
-            isGotPoint,
+            gotItem,
+            hitUser,
+            itemAbilities = null,
             isKilled;
 
-        hacmanUser = this.usersArray[this.hacmanId];
-        isKilled = (this.hacmanId && hacmanUser && (this.hacmanId !== this.me.id) && hacmanUser.chara.intersect(this.me.chara)) ? true : false;
+        hacmanUser = this._getUserData(this.hacmanId);
+        isKilled = (hacmanUser && !utils.isEqual(this.hacmanId, this.me.id) && this.me.hitTest(hacmanUser)) ? true : false;
 
         if (isKilled) {
-            this.server.updateUser({
-                id: this.hacmanId,
-                score: hacmanUser.score+1
-            });
-            hacmanUser.setScore(hacmanUser.score+1);
-            this.gameOver();
+            this._killedUser();
         } else {
             if (this.me.move()) {
-                isGotPoint = (this.point && this.point.intersect(this.me.chara)) ? true : false;
+                gotItem = this._itemHitTest();
 
-                if (isGotPoint) {
-                    this._removePoint();
-                    this.server.removePoint();
+                if (gotItem) {
+                    this.server.removeItem(gotItem.id);
+                    itemAbilities = gotItem.abilities;
+                }
 
-                    if (this.hacmanId && this.usersArray[this.hacmanId]) {
-                        this.usersArray[this.hacmanId].loseHacman();
-                    }
-                    this.me.getHacman();
-                    this.hacmanId = this.me.id;
+                if (this.me.hasAbility('kick')) {
+                    hitUser = this._userHitTest();
                 }
 
                 this.server.updateUser({
                     id: this.me.id,
                     x: this.me.x,
                     y: this.me.y,
-                    isHacman: this.me.isHacman
+                    item: itemAbilities
                 });
             }
         }
+
+        if (hitUser) {
+            if (!hitUser.isKicked) {
+                hitUser.kicked(this.me);
+            } else {
+                if (hitUser.move()) {
+                    this.server.updateUser({
+                        id: hitUser.id,
+                        x: hitUser.x,
+                        y: hitUser.y
+                    });
+                } else {
+                    hitUser = null;
+                }
+            }
+        }
     };
 
-    GameMain.prototype._onRemovePoint = function() {
-        this._removePoint();
+    GameMain.prototype._onRemoveItem = function(itemId) {
+        this._removeItem(itemId);
     };
 
-    GameMain.prototype._onReplacePoint = function(pointData) {
-        this._removePoint();
-        this._createPoint(pointData);
+    GameMain.prototype._onCreateItem = function(itemData) {
+        this._createItem(itemData);
     };
 
     GameMain.prototype._onJoinUser = function(userData) {
-        this._createUser(userData);
+        var user;
+
+        user = this._createUser(userData);
+        this.showMessage(utils.template(Const.message.user.join, {
+            targetName: userData.name
+        }), 'join');
+
+        return user;
     };
 
     GameMain.prototype._onUpdateUser = function(userData) {
-        var target = this.usersArray[userData.id];
+        var target = this._getUserData(userData.id);
 
-        target.x = userData.x || target.x;
-        target.y = userData.y || target.y;
+        if (target) {
+            target.update(userData);
 
-        if (userData.score && target.score !== userData.score) {
-            target.setScore(userData.score);
+            if (target.hasAbility('hacman')) {
+                this.hacmanId = target.id;
+            } else {
+                if (this.hacmanId === target.id) {
+                    this.hacmanId = null;
+                    this.server.updateUser({
+                        id: target.id,
+                        item: {
+                            hacman: false
+                        }
+                    });
+                }
+            }
         }
+    };
 
-        if (!target.isHacman && userData.isHacman) {
-            if (this.hacmanId && this.usersArray[this.hacmanId]) {
-                this.usersArray[this.hacmanId].loseHacman();
+    GameMain.prototype._onLoseUser = function(data) {
+        var target = this._getUserData(data.userId),
+            killer = this._getUserData(data.killerId) || {name: 'unknown'};
+
+        if (target) {
+            this.showMessage(utils.template(Const.message.user.lose, {
+                targetName: target.name,
+                killerName: killer.name
+            }), 'killed');
+        }
+        this._removeUser(data.userId);
+    };
+
+    GameMain.prototype._onLeaveUser = function(userId) {
+        var target = this._getUserData(userId),
+            observer = this._getObserverData(userId),
+            targetName;
+
+        if (target || observer) {
+            if (target) {
+                targetName = target.name;
+                this._removeUser(userId);
             }
 
-            target.getHacman();
-            this.hacmanId = userData.id;
+            if (observer) {
+                targetName = observer.name;
+                delete this.observersArray[userId];
+            }
+
+            if (userId === this.hacmanId) {
+                this.hacmanId = null;
+            }
+
+            this.showMessage(utils.template(Const.message.user.leave, {
+                targetName: targetName
+            }), 'leave');
         }
     };
 
-    GameMain.prototype._onLoseUser = function(userId) {
-        this._removeUser(userId);
-    };
+    GameMain.prototype._createItem = function(itemData) {
+        var item;
 
-    GameMain.prototype._onLeaveUser = function(userData) {
-        this._removeUser(userData.id);
-        this.onLeaveGame(userData);
-    };
-
-    GameMain.prototype._createPoint = function(pointData) {
-        var point;
-
-        point = new Point({
-            x: pointData.x,
-            y: pointData.y,
+        item = new Item({
+            id: itemData.id,
+            x: itemData.x,
+            y: itemData.y,
+            frame: itemData.frame,
+            abilities: itemData.abilities,
             game: this.game
         });
 
-        this.point = point;
-        this.rootScene.addChild(this.point);
+        this._setItemData(item.id, item);
+        this.itemsLayer.addChild(item);
 
-        return point;
+        return item;
     };
 
-    GameMain.prototype._removePoint = function() {
-        if (this.point) {
-            this.point.remove();
+    GameMain.prototype._removeItem = function(itemId) {
+        var item;
+
+        item = this._getItemData(itemId);
+        if (item) {
+            this.itemsLayer.removeChild(item);
+            delete this.itemsArray[itemId];
         }
+    };
+
+    GameMain.prototype._itemHitTest = function() {
+        var _this = this,
+            gotItem;
+
+        utils.each(_this.itemsArray, function(item) {
+            if (_this.me.hitTest(item)) {
+                gotItem = item;
+            }
+        });
+
+        return gotItem;
+    };
+
+    GameMain.prototype._userHitTest = function() {
+        var _this = this,
+            hitUser;
+
+        utils.each(_this.usersArray, function(user) {
+            if (user.id !== _this.me.id && _this.me.hitTest(user)) {
+                hitUser = user;
+            }
+        });
+
+        return hitUser;
+    };
+
+
+    GameMain.prototype._getItemData = function(itemId) {
+        return this.itemsArray[itemId];
+    };
+
+    GameMain.prototype._setItemData = function(itemId, itemObject) {
+        this.itemsArray[itemId] = itemObject;
     };
 
     GameMain.prototype._createUser = function(userData) {
@@ -212,15 +310,16 @@ HAC.define('GameMain', [
             name: userData.name,
             charaId: userData.charaId,
             score: userData.score || 0,
-            isHacman: userData.isHacman || false,
+            message: userData.message || '',
+            item: userData.item || {},
             x: userData.x,
             y: userData.y,
             map: this.map,
             game: this.game
         });
 
-        this.usersArray[userData.id] = user;
-        this.users.addChild(user);
+        this._setUserData(userData.id, user);
+        this.usersLayer.addChild(user);
 
         return user;
     };
@@ -228,12 +327,61 @@ HAC.define('GameMain', [
     GameMain.prototype._removeUser = function(userId) {
         var user;
 
-        user = this._getUser(userId);
-        this.users.removeChild(user);
+        user = this._getUserData(userId);
+        if (user) {
+            this.usersLayer.removeChild(user);
+            this.observersArray[userId] = this.usersArray[userId];
+            delete this.usersArray[userId];
+        }
     };
 
-    GameMain.prototype._getUser = function(userId) {
+    GameMain.prototype._getUserData = function(userId) {
         return this.usersArray[userId];
+    };
+
+    GameMain.prototype._getObserverData = function(userId) {
+        return this.observersArray[userId];
+    };
+
+    GameMain.prototype._setUserData = function(userId, userObject) {
+        this.usersArray[userId] = userObject;
+    };
+
+    GameMain.prototype._killedUser = function() {
+        var hacmanUser = this._getUserData(this.hacmanId);
+
+        this.me.dead();
+
+        this.server.updateUser({
+            id: this.hacmanId,
+            score: hacmanUser.score+1
+        });
+
+        this.server.loseUser({
+            userId: this.me.id,
+            killerId: this.hacmanId
+        });
+
+        this._gameOver();
+    };
+
+
+    GameMain.prototype._gameOver = function() {
+        this.rootScene.addChild(new End({
+            game: this.game
+        }));
+    };
+
+    GameMain.prototype.loadGame = function() {
+        this.game.start();
+    };
+
+    GameMain.prototype.onLoadGame = function() {
+        //for override
+    };
+
+    GameMain.prototype.startGame = function() {
+        this._main();
     };
 
     GameMain.prototype.getRandomPos = function() {
@@ -252,14 +400,8 @@ HAC.define('GameMain', [
         return pos;
     };
 
-    GameMain.prototype.gameOver = function() {
-        this.me.dead();
-        this.me.removeEventListener('enterframe');
-        this.server.loseUser(this.me.id);
-        this.rootScene.addChild(new End({
-            game: this.game
-        }));
-        this.onGameOver(this.usersArray[this.hacmanId].name);
+    GameMain.prototype.showMessage = function() {
+        //for override
     };
 
     return GameMain;

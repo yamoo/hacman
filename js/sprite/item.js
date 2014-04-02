@@ -1,4 +1,4 @@
-HAC.define('Point',[
+HAC.define('Item',[
     'utils',
     'Const'
 ], function(utils, Const) {
@@ -16,13 +16,15 @@ HAC.define('Point',[
             this.game = options.game;
             this.map = options.map;
 
+            this.id = options.id;
+            this.abilities = options.abilities;
             this.width = settings.width;
             this.height = settings.height;
             this.x = options.x;
             this.y = options.y;
 
-            this.image = this.game.assets[Const.assets['chara0']];
-            this.frame = 0;
+            this.image = this.game.assets[Const.assets['item0']];
+            this.frame = options.frame || 0;
         }
     });
 
