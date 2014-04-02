@@ -4,7 +4,7 @@ var io,
     users,
     items,
     observers,
-    maxItemNum = 5,
+    maxItemNum = 10,
     hacmanId,
     timerDuration = 2000;
 
