@@ -151,5 +151,7 @@ HAC.main([
         server.sendMessage(data);
     }
 
+    window.HAC.msg = _sendMessage;
+
     _init();
 });
