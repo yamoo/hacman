@@ -7,14 +7,15 @@ HAC.main([
     var server,
         gameMain,
         $signin,
-        $nickname;
+        $nickname,
+        secretCode = 'mode=vip';
 
     function _init () {
         var storage;
 
         if (_isIE()) {
-            utils.message('Sorry... I know you love IE, but unfortunately, we do not support IE. Please access via Chrome or Firefox.');
-            location.href = 'http://www.play.com/';
+            utils.message(Const.message.error.ie);
+            location.href = Const.link.redirect;
         } else {
             $signin = utils.$('#signin');
             $nickname = utils.$('#signin-nickname');
@@ -28,7 +29,7 @@ HAC.main([
                 utils.$('[name="signin-chara[]"][value="'+storage.charaId+'"]').checked = true;
             }
 
-            if (_checkQuery('mode=secret')) {
+            if (_checkQuery(secretCode)) {
                 utils.each(utils.$('.chara-hidden'), function($el) {
                     $el.style.visibility = 'visible';
                 });
@@ -42,7 +43,7 @@ HAC.main([
 
         e.preventDefault();
         nickname = $nickname.value;
-        charaId = utils.$('[name="signin-chara[]"]:checked').value;
+        charaId = utils.$('[name="signin-chara[]"]:checked').value - 0;
 
         _saveData({
             nickname: nickname,
@@ -78,7 +79,6 @@ HAC.main([
 
             utils.$('#ui-signin').remove();
             utils.$('#ui-chat').style.display = 'block';
-            utils.$('#ui-chat-send').addEventListener('click', _onSendMessage);
         });
 
         server.on('sendMessage', function(data) {
@@ -87,20 +87,7 @@ HAC.main([
 
         if (nickname) {
             server.connect();
-        } else {
-            utils.message('Please enter your nickname');
         }
-    }
-
-    function _onSendMessage() {
-        var msg,
-            $input;
-
-        $input = utils.$('#ui-chat-input');
-        msg = $input.value;
-        $input.value = '';
-
-        _sendMessage(msg);
     }
 
     function _loadData() {
@@ -138,7 +125,6 @@ HAC.main([
 
     function _getMessageHead(msg, status) {
         return {
-            date: new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds(),
             msg: msg,
             status: status || ''
         };
