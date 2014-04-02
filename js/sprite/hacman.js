@@ -93,17 +93,17 @@ HAC.define('Hacman',[
                 }
             }
 
-            if (dir === 'LEFT' && !this.map.hitTest(this.x-speed/2-1, this.y)) {
+            if (dir === 'LEFT' && !this.map.hitTest(this.x-speed/2, this.y)) {
                 this.x -= speed;
                 isMoved = true;
-            } else if (dir === 'RIGHT' && !this.map.hitTest(this.x+this.chara.width+speed/2-1, this.y)) {
+            } else if (dir === 'RIGHT' && !this.map.hitTest(this.x+this.chara.width+speed/2, this.y)) {
                 this.x += speed;
                 isMoved = true;
             }
-            if (dir === 'UP' && this.y && !this.map.hitTest(this.x, this.y-speed/2-1)) {
+            if (dir === 'UP' && this.y && !this.map.hitTest(this.x, this.y-speed/2)) {
                 this.y -= speed;
                 isMoved = true;
-            } else if (dir === 'DOWN' && !this.map.hitTest(this.x, this.y+this.chara.height+speed/2-1)) {
+            } else if (dir === 'DOWN' && !this.map.hitTest(this.x, this.y+this.chara.height+speed/2)) {
                 this.y += speed;
                 isMoved = true;
             }
