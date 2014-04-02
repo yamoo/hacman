@@ -151,7 +151,9 @@ HAC.main([
         server.sendMessage(data);
     }
 
-    window.HAC.msg = _sendMessage;
+    window.HAC.reset = function() {
+        _sendMessage('#reset');
+    };
 
     _init();
 });
