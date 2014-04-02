@@ -4,9 +4,9 @@ var io,
     users,
     items,
     observers,
-    maxItemNum = 5,
+    maxItemNum = 10,
     hacmanId,
-    timerDuration = 5000;
+    timerDuration = 2000;
 
 itemList = [{
     class: 'Point',
