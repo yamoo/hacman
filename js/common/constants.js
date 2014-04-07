@@ -3,7 +3,7 @@ HAC.define('Const',[
 
 	return {
 		//server: 'http://localhost:3000',
-		server: 'http://VLB12-28:3000',
+		server: 'http://VLB12-28:33000',
 		storage: 'hacman_data_v0.1',
 
 		world: {

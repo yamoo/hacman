@@ -1,10 +1,11 @@
 var io,
+    port = 33000,
     utils,
     itemList,
     users,
     items,
     observers,
-    maxItemNum = 10,
+    maxItemNum = 5,
     hacmanId,
     timerDuration = 2000;
 
@@ -47,9 +48,10 @@ itemList = [{
 users = {};
 observers = {};
 items = {};
+pointItem = null;
 
 utils = require('./js/common/utils');
-io = require('socket.io').listen(3000);
+io = require('socket.io').listen(port);
 
 io.sockets.on('connection', function (socket) {
 
@@ -100,11 +102,17 @@ io.sockets.on('connection', function (socket) {
                 target.item = utils.extend(target.item, userData.item);
 
                 if (target.item.hacman) {
-                    if (hacmanId && users[hacmanId]) {
+                    if (hacmanId && (hacmanId !== target.id) && users[hacmanId]) {
                         users[hacmanId].item.hacman = false;
                         socket.broadcast.emit('updateUser', users[hacmanId]);
                     }
                     hacmanId = target.id;
+                } else {
+                    if (users[target.id]) {
+                        users[target.id].item.hacman = false;
+                        socket.broadcast.emit('updateUser', users[target.id]);
+                    }
+                    hacmanId = null;
                 }
             }
         }
@@ -119,11 +127,17 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('createItem', function (itemData) {
+        if (itemData.class === 'Point') {
+            pointItem = itemData;
+        }
         items[itemData.id] = itemData;
         socket.broadcast.emit('createItem', itemData);
     });
 
     socket.on('removeItem', function (itemId) {
+        if (pointItem && (itemId === pointItem.id)) {
+            pointItem = null;
+        }
         socket.broadcast.emit('removeItem', itemId);
         delete items[itemId];
     });
@@ -164,10 +178,22 @@ setInterval(function() {
     if ((utils.length(items) < maxItemNum) && anyUserId) {
         io.sockets.socket(anyUserId).emit('createItem', getRandomItem());
     }
+
+    if (!pointItem) {
+        io.sockets.socket(anyUserId).emit('createItem', getPointItem());
+    }
+
 }, timerDuration);
 
+function getPointItem() {
+    var item = itemList[0];
+
+    item.id = getUniqueId('item');
+    return item;
+}
+
 function getRandomItem() {
-    var item = itemList[Math.floor(Math.random() * itemList.length)];
+    var item = itemList[Math.floor(Math.random() * (itemList.length-1))+1];
 
     item.id = getUniqueId('item');
     return item;
