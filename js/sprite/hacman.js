@@ -17,6 +17,9 @@ HAC.define('Hacman',[
         initialize: function(options){
             enchant.Group.call(this);
 
+            this.speed = options.speed || settings.speed;
+            this.cpu = options.cpu;
+
             this.game = options.game;
             this.map = options.map;
 
@@ -77,7 +80,7 @@ HAC.define('Hacman',[
 
         move: function(){
             var isMoved = false,
-                speed = this.item.speed || settings.speed,
+                speed = this.item.speed || this.speed,
                 pos = this.getTilePos(),
                 dir;
 
@@ -150,7 +153,7 @@ HAC.define('Hacman',[
         mapDirTest: function(dir) {
             var judge,
                 pos = this.getTilePos(),
-                speed = this.item.speed || settings.speed;
+                speed = this.item.speed || this.speed;
 
             switch(dir) {
                 case 'left':
@@ -266,9 +269,13 @@ HAC.define('Hacman',[
                     _this.getSick();
                 } else {
                     _this.getHelth();
-                    if (_this.item.speed < settings.speed) {
-                        _this.item.speed = settings.speed;
+                    if (_this.item.speed < _this.speed) {
+                        _this.item.speed = _this.speed;
                     }
+                }
+
+                if (_this.cpu) {
+                    _this.item.speed = _this.speed;
                 }
             }
         },

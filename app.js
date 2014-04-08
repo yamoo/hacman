@@ -63,6 +63,8 @@ io.sockets.on('connection', function (socket) {
             id: socket.id,
             name: userData.name,
             charaId: userData.charaId,
+            speed: userData.speed,
+            cpu: userData.cpu,
             score: 0,
             message: '',
             item: {},

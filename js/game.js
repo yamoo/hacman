@@ -335,6 +335,8 @@ HAC.define('GameMain', [
             id: userData.id,
             name: userData.name,
             charaId: userData.charaId,
+            cpu: userData.cpu,
+            speed: userData.speed,
             score: userData.score || 0,
             message: userData.message || '',
             item: userData.item || {},
@@ -415,9 +417,7 @@ HAC.define('GameMain', [
     };
 
     GameMain.prototype.startGame = function(options) {
-        this._main(options);
-
-        this.settings = options;
+        this._main();
 
         if (options.cpu) {
             this.usersLayer.addChild(new Cpu({

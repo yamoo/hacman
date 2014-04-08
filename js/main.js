@@ -6,7 +6,7 @@ HAC.main([
 ], function(Const, utils, Server, GameMain) {
     var server,
         gameMain,
-        gameOption = {},
+        isCPUMode = false,
         $signin,
         $nickname;
 
@@ -36,7 +36,7 @@ HAC.main([
             }
 
             if (_checkMode(Const.mode.cpu)) {
-                gameOption.cpu = true;
+                isCPUMode = true;
                 $nickname.value = 'CPU';
                 utils.$('[name="signin-chara[]"][value="15"]').checked = true;
                 _onSubmit();
@@ -73,19 +73,28 @@ HAC.main([
         };
 
         gameMain.onLoadGame = function() {
-            var initPos;
+            var initPos,
+                entryData;
             initPos = gameMain.getRandomPos();
-
-            server.entry({
+            entryData = {
                 name: nickname,
                 charaId: charaId,
                 x: initPos.x,
                 y: initPos.y
-            });
+            };
+
+            if (isCPUMode) {
+                entryData.cpu = true;
+                entryData.speed = 4;
+            }
+
+            server.entry(entryData);
         };
 
         server.on('accepted', function(data) {
-            gameMain.startGame(gameOption);
+            gameMain.startGame({
+                cpu: isCPUMode
+            });
 
             utils.$('#ui-signin').remove();
             utils.$('#ui-chat').style.display = 'block';
