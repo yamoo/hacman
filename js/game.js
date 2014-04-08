@@ -417,6 +417,7 @@ HAC.define('GameMain', [
     };
 
     GameMain.prototype.startGame = function(options) {
+        this.settings = options || {};
         this._main();
 
         if (options.cpu) {
