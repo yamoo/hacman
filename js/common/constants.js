@@ -2,7 +2,7 @@ HAC.define('Const',[
 ], function() {
 
 	return {
-		server: 'http://localhost:3000',
+		server: 'http://localhost:33000',
 		//server: 'http://VLB12-28:33000',
 		storage: 'hacman_data_v0.1',
 		timeout: 30000,

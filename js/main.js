@@ -38,7 +38,7 @@ HAC.main([
             if (_checkMode(Const.mode.cpu)) {
                 gameOption.cpu = true;
                 $nickname.value = 'CPU';
-                utils.$('[name="signin-chara[]"][value="0"]').checked = true;
+                utils.$('[name="signin-chara[]"][value="15"]').checked = true;
                 _onSubmit();
             }
         }
