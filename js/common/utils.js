@@ -18,15 +18,17 @@
     each = function(arg, callback) {
         var i;
 
-        if (arg instanceof Object) {
-            for (i in arg) {
-                if (arg.hasOwnProperty(i) && i !== 'length') {
+        if (arg) {
+            if (arg instanceof Object) {
+                for (i in arg) {
+                    if (arg.hasOwnProperty(i) && i !== 'length') {
+                        callback.apply(arg[i], [arg[i], i]);
+                    }
+                }
+            } else {
+                for (i=0;i<arg.length;i++) {
                     callback.apply(arg[i], [arg[i], i]);
                 }
-            }
-        } else {
-            for (i=0;i<arg.length;i++) {
-                callback.apply(arg[i], [arg[i], i]);
             }
         }
     };
@@ -166,7 +168,7 @@
     };
 
     isEmpty = function(val) {
-        return ((val === undefined) || (val === null) || (val === 0) || (val === '') || (length(val) === 0)) ? true : false;
+        return ((val !== undefined) && (val !== null) && (val !== 0) && (val !== '') && (length(val) !== 0)) ? false : true;
     };
 
     isEqual = function(a, b) {

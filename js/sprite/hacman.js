@@ -9,6 +9,7 @@ HAC.define('Hacman',[
         width: 32,
         height: 32,
         speed: 8,
+        kickedSpeed: 16,
         timerDuration: 1000
     };
 
@@ -64,47 +65,65 @@ HAC.define('Hacman',[
 
         kicked: function(kicker) {
             if (this.y - kicker.y > settings.height/2) {
-                this.isKicked = 'DOWN';
+                this.isKicked = 'down';
             } else if (kicker.x - this.x > settings.width/2) {
-                this.isKicked = 'LEFT';
+                this.isKicked = 'left';
             } else if (kicker.y - this.y > settings.height/2) {
-                this.isKicked = 'UP';
+                this.isKicked = 'up';
             } else {
-                this.isKicked = 'RIGHT';
+                this.isKicked = 'right';
             }
         },
 
         move: function(){
             var isMoved = false,
                 speed = this.item.speed || settings.speed,
+                pos = this.getTilePos(),
                 dir;
 
             if (this.isKicked) {
                 dir = this.isKicked;
             } else {
+
                 if (this.game.input.up) {
-                    dir = 'UP';
+                    dir = 'up';
                 } else if (this.game.input.down) {
-                    dir = 'DOWN';
+                    dir = 'down';
                 } else if (this.game.input.left) {
-                    dir = 'LEFT';
+                    dir = 'left';
                 } else if (this.game.input.right) {
-                    dir = 'RIGHT';
+                    dir = 'right';
                 }
             }
 
-            if (dir === 'LEFT' && !this.map.hitTest(this.x-speed/2, this.y)) {
-                this.x -= speed;
+            if (dir === 'left') {
+                if (!this.mapDirTest('left')) {
+                    this.x -= speed;
+                } else {
+                    this.x = pos.x;
+                }
                 isMoved = true;
-            } else if (dir === 'RIGHT' && !this.map.hitTest(this.x+this.chara.width+speed/2, this.y)) {
-                this.x += speed;
+            } else if (dir === 'right') {
+                if (!this.mapDirTest('right')) {
+                    this.x += speed;
+                } else {
+                    this.x = pos.x;
+                }
                 isMoved = true;
             }
-            if (dir === 'UP' && this.y && !this.map.hitTest(this.x, this.y-speed/2)) {
-                this.y -= speed;
+            if (dir === 'up') {
+                if (!this.mapDirTest('up')) {
+                    this.y -= speed;
+                } else {
+                    this.y = pos.y;
+                }
                 isMoved = true;
-            } else if (dir === 'DOWN' && !this.map.hitTest(this.x, this.y+this.chara.height+speed/2)) {
-                this.y += speed;
+            } else if (dir === 'down') {
+                if (!this.mapDirTest('down')) {
+                    this.y += speed;
+                } else {
+                    this.y = pos.y;
+                }
                 isMoved = true;
             }
 
@@ -120,6 +139,46 @@ HAC.define('Hacman',[
 
             return target.intersect(this.chara);
         },
+
+        getTilePos: function() {
+            return {
+                x: this.map.tileWidth * Math.floor(this.x/this.map.tileWidth),
+                y: this.map.tileHeight * Math.floor(this.y/this.map.tileHeight)
+            };
+        },
+
+        mapDirTest: function(dir) {
+            var judge,
+                pos = this.getTilePos(),
+                speed = this.item.speed || settings.speed;
+
+            switch(dir) {
+                case 'left':
+                    judge = this.map.hitTest(this.x-speed, this.y);
+                    break;
+                case 'right':
+                    judge = this.map.hitTest(pos.x+this.chara.width+speed, this.y);
+                    break;
+                case 'up':
+                    judge = this.map.hitTest(this.x, this.y-speed);
+                    break;
+                case 'down':
+                    judge = this.map.hitTest(this.x, pos.y+this.chara.height+speed);
+                    break;
+            }
+
+            return judge;
+        },
+
+        checkRight: function() {
+            return !this.map.hitTest(this.x-speed, this.y);
+        },
+
+        checkTop: function() {
+            return !this.map.hitTest(this.x-speed, this.y);
+        },
+
+
 
         setLabel: function() {
             this.label.text = this.name + ' (' + this.score + ')';
@@ -192,7 +251,9 @@ HAC.define('Hacman',[
                 _this.setComment(val);
             });
 
+
             if (!utils.isEmpty(data.item)) {
+
                 _this.item = utils.extend(_this.item, data.item);
 
                 if (_this.hasAbility('hacman')) {
