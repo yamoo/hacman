@@ -6,9 +6,9 @@ HAC.main([
 ], function(Const, utils, Server, GameMain) {
     var server,
         gameMain,
+        gameOption = {},
         $signin,
-        $nickname,
-        secretCode = 'mode=vip';
+        $nickname;
 
     function _init () {
         var storage;
@@ -29,10 +29,17 @@ HAC.main([
                 utils.$('[name="signin-chara[]"][value="'+storage.charaId+'"]').checked = true;
             }
 
-            if (_checkQuery(secretCode)) {
+            if (_checkMode(Const.mode.secret)) {
                 utils.each(utils.$('.chara-hidden'), function($el) {
                     $el.style.visibility = 'visible';
                 });
+            }
+
+            if (_checkMode(Const.mode.cpu)) {
+                gameOption.cpu = true;
+                $nickname.value = 'CPU';
+                utils.$('[name="signin-chara[]"][value="0"]').checked = true;
+                _onSubmit();
             }
         }
     }
@@ -41,7 +48,10 @@ HAC.main([
         var nickname,
             charaId;
 
-        e.preventDefault();
+        if (e) {
+            e.preventDefault();            
+        }
+
         nickname = $nickname.value;
         charaId = utils.$('[name="signin-chara[]"]:checked').value - 0;
 
@@ -75,7 +85,7 @@ HAC.main([
         };
 
         server.on('accepted', function(data) {
-            gameMain.startGame();
+            gameMain.startGame(gameOption);
 
             utils.$('#ui-signin').remove();
             utils.$('#ui-chat').style.display = 'block';
@@ -113,10 +123,10 @@ HAC.main([
         return isIE;
     }
 
-    function _checkQuery(query) {
+    function _checkMode(query) {
         var isQuery;
 
-        if (new RegExp(query).test(location.search)) {
+        if (new RegExp('mode='+query).test(location.search)) {
             isQuery = true;
         }
 

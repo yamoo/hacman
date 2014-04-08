@@ -1,5 +1,6 @@
 var io,
-    port = 33000,
+    //port = 33000,
+    port = 3000,
     utils,
     itemList,
     users,
@@ -10,28 +11,28 @@ var io,
     timerDuration = 2000;
 
 itemList = [{
-    class: 'Point',
+    type: 'Point',
     frame: 0,
     abilities: {
         hacman: true,
         sick: false
     }
 }, {
-    class: 'Kick',
+    type: 'Kick',
     frame: 1,
     abilities: {
         kick: true,
         sick: false
     }
 }, {
-    class: 'Dash',
+    type: 'Dash',
     frame: 2,
     abilities: {
         speed: 16,
         sick: false
     }
 }, {
-    class: 'Devil',
+    type: 'Devil',
     frame: 3,
     abilities: {
         speed: 2,
@@ -39,7 +40,7 @@ itemList = [{
         sick: true
     }
 }, {
-    class: 'Drug',
+    type: 'Drug',
     frame: 4,
     abilities: {
         sick: false
@@ -112,7 +113,10 @@ io.sockets.on('connection', function (socket) {
                         users[target.id].item.hacman = false;
                         socket.broadcast.emit('updateUser', users[target.id]);
                     }
-                    hacmanId = null;
+
+                    if (hacmanId && (hacmanId === target.id)) {
+                        hacmanId = null;
+                    }
                 }
             }
         }
@@ -127,7 +131,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('createItem', function (itemData) {
-        if (itemData.class === 'Point') {
+        if (itemData.type === 'Point') {
             pointItem = itemData;
         }
         items[itemData.id] = itemData;
@@ -182,13 +186,12 @@ setInterval(function() {
     if (!pointItem) {
         io.sockets.socket(anyUserId).emit('createItem', getPointItem());
     }
-
 }, timerDuration);
 
 function getPointItem() {
     var item = itemList[0];
 
-    item.id = getUniqueId('item');
+    item.id = getUniqueId('point');
     return item;
 }
 

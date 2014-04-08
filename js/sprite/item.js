@@ -17,6 +17,7 @@ HAC.define('Item',[
             this.map = options.map;
 
             this.id = options.id;
+            this.type = options.type;
             this.abilities = options.abilities;
             this.width = settings.width;
             this.height = settings.height;

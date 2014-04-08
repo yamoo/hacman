@@ -4,8 +4,9 @@ HAC.define('GameMain', [
     'BaseMap',
     'Hacman',
     'Item',
-    'End'
-], function(Const, utils, BaseMap, Hacman, Item, End) {
+    'End',
+    'Cpu'
+], function(Const, utils, BaseMap, Hacman, Item, End, Cpu) {
     var GameMain;
 
     GameMain = function(server) {
@@ -29,6 +30,7 @@ HAC.define('GameMain', [
     };
 
     GameMain.prototype._initWorld = function() {
+        this.isTimeout = false;
         this.usersArray = {};
         this.observersArray = {};
         this.itemsArray = {};
@@ -55,7 +57,8 @@ HAC.define('GameMain', [
             '_onLoseUser',
             '_onLeaveUser',
             '_onCreateItem',
-            '_onRemoveItem'
+            '_onRemoveItem',
+            '_onTimeout'
         );
 
         _this.hacmanId = _this.server.data.hacmanId;
@@ -119,13 +122,23 @@ HAC.define('GameMain', [
 
         if (isKilled) {
             this._killedUser();
+            this._sound('kill');
         } else {
             if (this.me.move()) {
+                //this._sound('walk');
                 gotItem = this._itemHitTest();
 
                 if (gotItem) {
                     this.server.removeItem(gotItem.id);
                     itemAbilities = gotItem.abilities;
+
+                    if (gotItem.type === 'Point') {
+                        this._sound('point');
+                    } else if (gotItem.type === 'Devil') {
+                        this._sound('sick');
+                    } else {
+                        this._sound('item');
+                    }
                 }
 
                 if (this.me.hasAbility('kick')) {
@@ -138,10 +151,14 @@ HAC.define('GameMain', [
                     y: this.me.y,
                     item: itemAbilities
                 });
+
+                this.isTimeout = false;
             }
         }
 
         if (hitUser) {
+            this._sound('kick');
+
             if (!hitUser.isKicked) {
                 hitUser.kicked(this.me);
             } else {
@@ -238,6 +255,14 @@ HAC.define('GameMain', [
         }
     };
 
+    GameMain.prototype._onTimeout = function() {
+        if (this.isTimeout) {
+            location.reload();
+        } else {
+            this.isTimeout = true;
+        }
+    };
+
     GameMain.prototype._createItem = function(itemData) {
         var item;
 
@@ -245,6 +270,7 @@ HAC.define('GameMain', [
             id: itemData.id,
             x: itemData.x,
             y: itemData.y,
+            type: itemData.type,
             frame: itemData.frame,
             abilities: itemData.abilities,
             game: this.game
@@ -365,11 +391,19 @@ HAC.define('GameMain', [
         this._gameOver();
     };
 
+    GameMain.prototype._sound = function(name) {
+        this.game.assets[Const.assets['snd_'+name]].play();
+    };
 
     GameMain.prototype._gameOver = function() {
         this.rootScene.addChild(new End({
             game: this.game
         }));
+        this._sound('end');
+
+        if (this.settings.cpu) {
+            location.reload();
+        }
     };
 
     GameMain.prototype.loadGame = function() {
@@ -380,8 +414,23 @@ HAC.define('GameMain', [
         //for override
     };
 
-    GameMain.prototype.startGame = function() {
-        this._main();
+    GameMain.prototype.startGame = function(options) {
+        this._main(options);
+
+        this.settings = options;
+
+        if (options.cpu) {
+            this.usersLayer.addChild(new Cpu({
+                map: this.map,
+                game: this.game,
+                usersArray: this.usersArray,
+                itemsArray: this.itemsArray,
+                me: this.me
+            }));
+        } else {
+            //timeout management
+            setInterval(this._onTimeout, Const.timeout);
+        }
     };
 
     GameMain.prototype.getRandomPos = function() {
